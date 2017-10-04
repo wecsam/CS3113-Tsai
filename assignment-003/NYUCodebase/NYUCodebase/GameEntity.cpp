@@ -2,6 +2,7 @@
 	#include <GL/glew.h>
 #endif
 #include "GameEntity.h"
+#include "Dimensions.h"
 Entity::UVWrap::UVWrap() {}
 Entity::UVWrap::UVWrap(float U, float V, float Width, float Height) :
 	U(U), V(V), Width(Width), Height(Height) {}
@@ -42,6 +43,10 @@ void Entity::Draw(ShaderProgram& program) const {
 	glDisableVertexAttribArray(program.positionAttribute);
 	glDisableVertexAttribArray(program.texCoordAttribute);
 }
+void Entity::GetCenter(float& x, float& y) const {
+	x = (GetLeftBoxBound() + GetRightBoxBound()) / 2.0f;
+	y = (GetTopBoxBound() + GetBottomBoxBound()) / 2.0f;
+}
 void Entity::SetBoxLeft(float* a, float x) {
 	a[VERTEX_INDICES::T1_TOP_LEFT_X] =
 		a[VERTEX_INDICES::T1_BOTTOM_LEFT_X] =
@@ -66,9 +71,9 @@ void Entity::SetBoxBottom(float* a, float y) {
 		a[VERTEX_INDICES::T2_BOTTOM_RIGHT_Y] =
 		y;
 }
-Entity::Entity(GLuint spriteSheet, float x, float y, float width, float height, float size) {
+Entity::Entity(GLuint spriteSheet, float x, float y, float width, float height, float scale = 1.0f) {
 	SetSpriteSheet(spriteSheet);
-	SetSprite(x, y, width, height, size);
+	SetSprite(x, y, width, height, scale);
 }
 void Entity::MoveX(float dx) {
 	SetBoxLeft(vertices, GetLeftBoxBound() + dx);
@@ -82,7 +87,7 @@ void Entity::SetSpriteSheet(GLuint spriteSheet) {
 	// Store the texture ID.
 	this->spriteSheet = spriteSheet;
 }
-void Entity::SetSprite(float x, float y, float width, float height, float size) {
+void Entity::SetSprite(float x, float y, float width, float height, float scale = 1.0f) {
 	// Store the new UV mapping.
 	UV = UVWrap(
 		x / SPRITE_SHEET_WIDTH,
@@ -93,9 +98,12 @@ void Entity::SetSprite(float x, float y, float width, float height, float size) 
 	// Recompute the texture coordinates array.
 	UV.GetTextureCoordinates(texCoords);
 	// Recompute the bounding box.
-	float aspectRatio = width / height;
-	SetBoxLeft(vertices, -0.5f * size * aspectRatio);
-	SetBoxRight(vertices, 0.5f * size * aspectRatio);
-	SetBoxTop(vertices, 0.5f * size);
-	SetBoxBottom(vertices, -0.5f * size);
+	float orthoXBound = scale * width / WIDTH * ORTHO_X_BOUND,
+		orthoYBound = scale * height / HEIGHT * ORTHO_Y_BOUND,
+		centerX, centerY;
+	GetCenter(centerX, centerY);
+	SetBoxLeft(vertices, centerX - orthoXBound);
+	SetBoxRight(vertices, centerX + orthoXBound);
+	SetBoxTop(vertices, centerY + orthoYBound);
+	SetBoxBottom(vertices, centerY - orthoYBound);
 }

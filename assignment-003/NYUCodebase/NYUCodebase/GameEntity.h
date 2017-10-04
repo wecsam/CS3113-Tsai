@@ -10,6 +10,7 @@ public:
 	float GetBottomBoxBound() const;
 	bool IsCollidingWith(const Entity&) const;
 	void Draw(ShaderProgram&) const;
+	void GetCenter(float&, float&) const;
 protected:
 	Entity(GLuint, float, float, float, float, float);
 	void MoveX(float);
@@ -17,7 +18,6 @@ protected:
 	// To determine which sprite appears on screen, the texture must be mapped onto this rectangle.
 	void SetSpriteSheet(GLuint);
 	// To change the sprite, use SetSprite and give it the coordinates of the image.
-	// The last parameter is the size. It becomes the displayed height relative to the orthogonal view bounds.
 	void SetSprite(float, float, float, float, float);
 	struct UVWrap {
 		float U, V, Width, Height;
@@ -50,7 +50,7 @@ private:
 		T2_BOTTOM_RIGHT_Y,
 		NUM_VERTICES
 	};
-	float vertices[VERTEX_INDICES::NUM_VERTICES];
+	float vertices[VERTEX_INDICES::NUM_VERTICES] = { 0.0f };
 	float texCoords[VERTEX_INDICES::NUM_VERTICES];
 	GLuint spriteSheet;
 };
