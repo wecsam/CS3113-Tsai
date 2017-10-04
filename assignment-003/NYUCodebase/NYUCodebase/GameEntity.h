@@ -65,3 +65,12 @@ class Bullet : public Entity {
 public:
 	Bullet(GLuint);
 };
+class Invader : public Entity {
+public:
+	enum INVADER_TYPE {
+		BACK,
+		MIDDLE,
+		FRONT
+	};
+	Invader(GLuint, INVADER_TYPE);
+};

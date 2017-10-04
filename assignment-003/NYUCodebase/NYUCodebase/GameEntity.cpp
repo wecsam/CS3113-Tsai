@@ -121,3 +121,5 @@ void PlayerLaserCannon::ShowThrustRight() {
 }
 Bullet::Bullet(GLuint spriteSheet) :
 	Entity(spriteSheet, 177.0f, 25.0f, 12.0f, 64.0f, SPRITE_SCALE) {}
+Invader::Invader(GLuint spriteSheet, INVADER_TYPE invaderType) :
+	Entity(spriteSheet, 114.0f, 120.0f + invaderType * 64.0f, 84.0f, 64.0f, SPRITE_SCALE) {}
