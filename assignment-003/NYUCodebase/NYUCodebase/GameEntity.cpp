@@ -119,3 +119,5 @@ void PlayerLaserCannon::ShowThrustLeft() {
 void PlayerLaserCannon::ShowThrustRight() {
 	SetSprite(3.0f, 164.0f, 111.0f, 74.0f, SPRITE_SCALE);
 }
+Bullet::Bullet(GLuint spriteSheet) :
+	Entity(spriteSheet, 177.0f, 25.0f, 12.0f, 64.0f, SPRITE_SCALE) {}

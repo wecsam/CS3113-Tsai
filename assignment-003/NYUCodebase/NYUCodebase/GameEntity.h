@@ -61,3 +61,7 @@ public:
 	void ShowThrustLeft();
 	void ShowThrustRight();
 };
+class Bullet : public Entity {
+public:
+	Bullet(GLuint);
+};
