@@ -4,6 +4,12 @@
 #include "GameEntity.h"
 #include "Dimensions.h"
 #define SPRITE_SCALE 0.5f
+#define PLAYER_ACCEL 0.0000125f
+#define PLAYER_BRAKE 0.01f
+#define STATIONARY_VELOCITY 0.0001f
+float lerp(float v0, float v1, float t) {
+	return (1.0 - t) * v0 + t * v1;
+}
 Entity::UVWrap::UVWrap() {}
 Entity::UVWrap::UVWrap(float U, float V, float Width, float Height) :
 	U(U), V(V), Width(Width), Height(Height) {}
@@ -110,16 +116,77 @@ void Entity::SetSprite(float x, float y, float width, float height, float scale 
 }
 PlayerLaserCannon::PlayerLaserCannon(GLuint spriteSheet) :
 	Entity(spriteSheet, 3.0f, 90.0f, 111.0f, 74.0f, SPRITE_SCALE) {}
+void PlayerLaserCannon::CalculateMotion(Uint32 millisecondsElapsed) {
+	// Change the velocity based on the current movement type.
+	switch (CurrentMovement) {
+	case STATIONARY:
+		// Slow the cannon down.
+		velocity = lerp(velocity, 0.0f, millisecondsElapsed * PLAYER_BRAKE);
+		// Show a reverse thrust.
+		if (velocity > STATIONARY_VELOCITY) {
+			ShowThrustLeft();
+		}
+		else if (velocity < -STATIONARY_VELOCITY) {
+			ShowThrustRight();
+		}
+		else {
+			ShowNoThrust();
+		}
+		break;
+	case LEFT:
+		// Move the cannon left.
+		velocity -= PLAYER_ACCEL * millisecondsElapsed;
+		ShowThrustLeft();
+		break;
+	case RIGHT:
+		// Move the cannon right.
+		velocity += PLAYER_ACCEL * millisecondsElapsed;
+		ShowThrustRight();
+		break;
+	}
+	// Change the position based on the velocity.
+	MoveX(velocity * millisecondsElapsed);
+	// Make sure that the cannon does not go off-screen.
+	if (GetLeftBoxBound() < -ORTHO_X_BOUND && velocity < 0 || GetRightBoxBound() > ORTHO_X_BOUND && velocity > 0) {
+		velocity *= -0.2f;
+	}
+}
 void PlayerLaserCannon::ShowNoThrust() {
-	SetSprite(3.0f, 90.0f, 111.0f, 74.0f, SPRITE_SCALE);
+	if (CurrentThrust != STATIONARY) {
+		SetSprite(3.0f, 90.0f, 111.0f, 74.0f, SPRITE_SCALE);
+		CurrentThrust = STATIONARY;
+	}
 }
 void PlayerLaserCannon::ShowThrustLeft() {
-	SetSprite(3.0f, 238.0f, 111.0f, 74.0f, SPRITE_SCALE);
+	if (CurrentThrust != LEFT) {
+		SetSprite(3.0f, 238.0f, 111.0f, 74.0f, SPRITE_SCALE);
+		CurrentThrust = LEFT;
+	}
 }
 void PlayerLaserCannon::ShowThrustRight() {
-	SetSprite(3.0f, 164.0f, 111.0f, 74.0f, SPRITE_SCALE);
+	if (CurrentThrust != RIGHT) {
+		SetSprite(3.0f, 164.0f, 111.0f, 74.0f, SPRITE_SCALE);
+		CurrentThrust = RIGHT;
+	}
 }
-Bullet::Bullet(GLuint spriteSheet) :
-	Entity(spriteSheet, 177.0f, 25.0f, 12.0f, 64.0f, SPRITE_SCALE) {}
+Bullet::Bullet(GLuint spriteSheet, bool fromPlayer, float x, float y) :
+	Entity(spriteSheet, 177.0f, 25.0f, 12.0f, 64.0f, SPRITE_SCALE) {
+	MoveX(x);
+	MoveY(y);
+	velocity = fromPlayer ? 0.012f : -0.01f;
+}
+bool Bullet::IsOffScreen() const {
+	// Bullets can't travel sideways in this game, so we only need to check the Y position.
+	return GetTopBoxBound() < -ORTHO_Y_BOUND ||
+		GetBottomBoxBound() > ORTHO_Y_BOUND;
+}
+void Bullet::CalculateMotion(Uint32 millisecondsElapsed) {
+	// A bullet has no on-board propulsion, and the game is set in space.
+	// Just move at a constant velocity.
+	MoveY(velocity * millisecondsElapsed);
+}
 Invader::Invader(GLuint spriteSheet, INVADER_TYPE invaderType) :
 	Entity(spriteSheet, 114.0f, 120.0f + invaderType * 64.0f, 84.0f, 64.0f, SPRITE_SCALE) {}
+void Invader::CalculateMotion(Uint32 millisecondsElapsed) {
+	// TODO
+}

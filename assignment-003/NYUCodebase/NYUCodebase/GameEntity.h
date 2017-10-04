@@ -1,4 +1,5 @@
 #pragma once
+#include <SDL.h>
 #include "ShaderProgram.h"
 #define SPRITE_SHEET_WIDTH 200.0f // pixels
 #define SPRITE_SHEET_HEIGHT 314.0f // pixels
@@ -13,6 +14,7 @@ public:
 	void GetCenter(float&, float&) const;
 	void MoveX(float);
 	void MoveY(float);
+	virtual void CalculateMotion(Uint32) = 0;
 protected:
 	Entity(GLuint, float, float, float, float, float);
 	// To determine which sprite appears on screen, the texture must be mapped onto this rectangle.
@@ -57,13 +59,27 @@ private:
 class PlayerLaserCannon : public Entity {
 public:
 	PlayerLaserCannon(GLuint);
+	void CalculateMotion(Uint32);
 	void ShowNoThrust();
 	void ShowThrustLeft();
 	void ShowThrustRight();
+	enum MOVEMENTS {
+		STATIONARY,
+		LEFT,
+		RIGHT
+	};
+	MOVEMENTS CurrentMovement = MOVEMENTS::STATIONARY;
+private:
+	MOVEMENTS CurrentThrust = MOVEMENTS::STATIONARY;
+	float velocity = 0.0f;
 };
 class Bullet : public Entity {
 public:
-	Bullet(GLuint);
+	Bullet(GLuint, bool, float = 0.0f, float = 0.0f);
+	bool IsOffScreen() const;
+	void CalculateMotion(Uint32);
+private:
+	float velocity;
 };
 class Invader : public Entity {
 public:
@@ -73,4 +89,5 @@ public:
 		FRONT
 	};
 	Invader(GLuint, INVADER_TYPE);
+	void CalculateMotion(Uint32);
 };
