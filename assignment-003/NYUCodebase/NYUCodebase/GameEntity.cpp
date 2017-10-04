@@ -3,6 +3,7 @@
 #endif
 #include "GameEntity.h"
 #include "Dimensions.h"
+#define SPRITE_SCALE 0.5f
 Entity::UVWrap::UVWrap() {}
 Entity::UVWrap::UVWrap(float U, float V, float Width, float Height) :
 	U(U), V(V), Width(Width), Height(Height) {}
@@ -106,4 +107,15 @@ void Entity::SetSprite(float x, float y, float width, float height, float scale 
 	SetBoxRight(vertices, centerX + orthoXBound);
 	SetBoxTop(vertices, centerY + orthoYBound);
 	SetBoxBottom(vertices, centerY - orthoYBound);
+}
+PlayerLaserCannon::PlayerLaserCannon(GLuint spriteSheet) :
+	Entity(spriteSheet, 3.0f, 90.0f, 111.0f, 74.0f, SPRITE_SCALE) {}
+void PlayerLaserCannon::ShowNoThrust() {
+	SetSprite(3.0f, 90.0f, 111.0f, 74.0f, SPRITE_SCALE);
+}
+void PlayerLaserCannon::ShowThrustLeft() {
+	SetSprite(3.0f, 238.0f, 111.0f, 74.0f, SPRITE_SCALE);
+}
+void PlayerLaserCannon::ShowThrustRight() {
+	SetSprite(3.0f, 164.0f, 111.0f, 74.0f, SPRITE_SCALE);
 }

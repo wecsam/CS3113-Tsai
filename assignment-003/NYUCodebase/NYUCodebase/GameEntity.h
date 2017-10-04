@@ -54,4 +54,10 @@ private:
 	float texCoords[VERTEX_INDICES::NUM_VERTICES];
 	GLuint spriteSheet;
 };
+class PlayerLaserCannon : public Entity {
+public:
+	PlayerLaserCannon(GLuint);
+	void ShowNoThrust();
+	void ShowThrustLeft();
+	void ShowThrustRight();
 };
