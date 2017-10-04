@@ -11,10 +11,10 @@ public:
 	bool IsCollidingWith(const Entity&) const;
 	void Draw(ShaderProgram&) const;
 	void GetCenter(float&, float&) const;
-protected:
-	Entity(GLuint, float, float, float, float, float);
 	void MoveX(float);
 	void MoveY(float);
+protected:
+	Entity(GLuint, float, float, float, float, float);
 	// To determine which sprite appears on screen, the texture must be mapped onto this rectangle.
 	void SetSpriteSheet(GLuint);
 	// To change the sprite, use SetSprite and give it the coordinates of the image.
