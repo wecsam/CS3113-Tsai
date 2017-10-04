@@ -88,6 +88,29 @@ int main(int argc, char *argv[])
 
 	// Load textures
 	GLuint spriteSheet = LoadTexture(RESOURCE_FOLDER"Images/sprites.png");
+	GLuint startScreen = LoadTexture(RESOURCE_FOLDER"Images/start.png");
+
+	// Start screen coordinates
+	// 40 pixels from left of screen
+	// 100 pixels from top of screen
+	// 40 pixels from right of screen
+	// 370 pixels from bottom of screen
+	float startScreenVertices[] = {
+		ORTHO_X_BOUND * (80.0f / WIDTH - 1.0f), ORTHO_Y_BOUND * (1.0f - 200.0f / HEIGHT),
+		ORTHO_X_BOUND * (80.0f / WIDTH - 1.0f), ORTHO_Y_BOUND * (740.0f / HEIGHT - 1.0f),
+		ORTHO_X_BOUND * (1.0f - 80.0f / WIDTH), ORTHO_Y_BOUND * (1.0f - 200.0f / HEIGHT),
+		ORTHO_X_BOUND * (1.0f - 80.0f / WIDTH), ORTHO_Y_BOUND * (1.0f - 200.0f / HEIGHT),
+		ORTHO_X_BOUND * (80.0f / WIDTH - 1.0f), ORTHO_Y_BOUND * (740.0f / HEIGHT - 1.0f),
+		ORTHO_X_BOUND * (1.0f - 80.0f / WIDTH), ORTHO_Y_BOUND * (740.0f / HEIGHT - 1.0f)
+	};
+	float startScreenTexCoords[] = {
+		0.0f, 0.0f,
+		0.0f, 1.0f,
+		1.0f, 0.0f,
+		1.0f, 0.0f,
+		0.0f, 1.0f,
+		1.0f, 1.0f
+	};
 
 	// Create the player's cannon
 	PlayerLaserCannon player(spriteSheet);
@@ -107,8 +130,19 @@ int main(int argc, char *argv[])
 			lastFrameTick = thisFrameTick;
 			done = ProcessInput(spriteSheet, player, bullets);
 			glClear(GL_COLOR_BUFFER_BIT);
+			// Draw start screen
+			glVertexAttribPointer(program.positionAttribute, 2, GL_FLOAT, false, 0, startScreenVertices);
+			glVertexAttribPointer(program.texCoordAttribute, 2, GL_FLOAT, false, 0, startScreenTexCoords);
+			glEnableVertexAttribArray(program.positionAttribute);
+			glEnableVertexAttribArray(program.texCoordAttribute);
+			glBindTexture(GL_TEXTURE_2D, startScreen);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+			glDisableVertexAttribArray(program.positionAttribute);
+			glDisableVertexAttribArray(program.texCoordAttribute);
+			// Draw player
 			player.CalculateMotion(millisecondsElapsed);
 			player.Draw(program);
+			// Draw bullets
 			for (auto i = bullets.begin(); i != bullets.end();) {
 				i->CalculateMotion(millisecondsElapsed);
 				if (i->IsOffScreen()) {
