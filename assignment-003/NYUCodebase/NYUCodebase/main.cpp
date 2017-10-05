@@ -2,6 +2,7 @@
 #include <forward_list>
 #include <iostream>
 #include <string>
+#include <vector>
 #ifdef _WINDOWS
 	#define RESOURCE_FOLDER ""
 	#include <GL/glew.h>
@@ -16,6 +17,7 @@
 #include "ShaderProgram.h"
 #include "GameEntity.h"
 #include "Dimensions.h"
+#include "Lives.h"
 #define START_SCREEN_TOP PIXEL_FROM_TOP_TO_ORTHO(100)
 #define START_SCREEN_BOTTOM PIXEL_FROM_BOTTOM_TO_ORTHO(370)
 #define START_SCREEN_LEFT_RIGHT PIXEL_FROM_RIGHT_TO_ORTHO(40)
@@ -215,6 +217,13 @@ int main(int argc, char *argv[])
 			SDL_GL_SwapWindow(displayWindow);
 		}
 		// Loop for gameplay
+		Lives lives(
+			spriteSheet,
+			player.GetWidth(),
+			4,
+			PIXEL_FROM_LEFT_TO_ORTHO((20.0f + CHARACTERS_WIDTH * 4.0f)),
+			PIXEL_FROM_TOP_TO_ORTHO((HEIGHT - 20.555f - CHARACTERS_BASELINE * 0.5f)) - PIXEL_TO_ORTHO_Y((CHARACTERS_BASELINE * 0.5f)) + player.GetHeight() * 0.4797297418f
+		);
 		unsigned int score = 0;
 		while (mode == GAME_MODE_PLAY) {
 			Uint32 millisecondsElapsed = MillisecondsElapsed();
@@ -225,6 +234,9 @@ int main(int argc, char *argv[])
 			glClear(GL_COLOR_BUFFER_BIT);
 			// Draw player's current score
 			DrawText(program, charactersT, "Score: " + std::to_string(score), 20.0f, 49.445f, 0.5f);
+			// Draw player's number of lives
+			DrawText(program, charactersT, "Lives:", 20.0f, HEIGHT - 20.555f, 0.5f);
+			lives.Draw(program);
 			SDL_GL_SwapWindow(displayWindow);
 		}
 	}

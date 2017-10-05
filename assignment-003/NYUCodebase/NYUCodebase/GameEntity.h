@@ -9,6 +9,8 @@ public:
 	float GetRightBoxBound() const;
 	float GetTopBoxBound() const;
 	float GetBottomBoxBound() const;
+	float GetWidth() const;
+	float GetHeight() const;
 	bool IsCollidingWith(const Entity&) const;
 	void Draw(ShaderProgram&) const;
 	void GetCenter(float&, float&) const;

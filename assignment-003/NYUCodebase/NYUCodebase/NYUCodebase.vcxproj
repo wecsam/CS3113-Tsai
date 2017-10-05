@@ -76,6 +76,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="GameEntity.cpp" />
+    <ClCompile Include="Lives.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="ShaderProgram.cpp" />
@@ -83,6 +84,7 @@
   <ItemGroup>
     <ClInclude Include="GameEntity.h" />
     <ClInclude Include="Dimensions.h" />
+    <ClInclude Include="Lives.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="ShaderProgram.h" />
   </ItemGroup>

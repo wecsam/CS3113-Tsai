@@ -28,6 +28,12 @@ float Entity::GetTopBoxBound() const {
 float Entity::GetBottomBoxBound() const {
 	return vertices[VertexIndices::T1_BOTTOM_LEFT_Y];
 }
+float Entity::GetWidth() const {
+	return GetRightBoxBound() - GetLeftBoxBound();
+}
+float Entity::GetHeight() const {
+	return GetTopBoxBound() - GetBottomBoxBound();
+}
 bool Entity::IsCollidingWith(const Entity& other) const {
 	return !(
 		other.GetTopBoxBound() < GetBottomBoxBound() ||
