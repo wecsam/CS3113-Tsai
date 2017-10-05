@@ -24,6 +24,7 @@
 #define START_SCREEN_LEFT_RIGHT PIXEL_FROM_RIGHT_TO_ORTHO(40)
 #define START_SCREEN_BUTTON_OUTER (164.0f / 260.25f * START_SCREEN_LEFT_RIGHT)
 #define START_SCREEN_BUTTON_INNER (66.0f / 260.25f * START_SCREEN_LEFT_RIGHT)
+#define REMOVE_OFFSCREEN_BULLETS(bullets) bullets.remove_if([](const Bullet& b) { return b.IsOffScreen(); })
 enum GameMode {
 	GAME_MODE_QUIT,
 	GAME_MODE_START,
@@ -149,9 +150,8 @@ int main(int argc, char *argv[])
 			// Draw player
 			player.CalculateMotion(millisecondsElapsed);
 			player.Draw(program);
-			// Delete bullets that have gone off the screen.
-			bullets.remove_if([](const Bullet& b) { return b.IsOffScreen(); });
 			// Draw bullets
+			REMOVE_OFFSCREEN_BULLETS(bullets);
 			for (Bullet& b : bullets) {
 				b.CalculateMotion(millisecondsElapsed);
 				// Check whether the bullet has hit one of the buttons.
@@ -183,6 +183,15 @@ int main(int argc, char *argv[])
 			// Draw player's number of lives
 			DrawText(program, charactersT, "Lives:", 20.0f, HEIGHT - 20.555f, 0.5f);
 			lives.Draw(program);
+			// Draw player
+			player.CalculateMotion(millisecondsElapsed);
+			player.Draw(program);
+			// Draw bullets
+			REMOVE_OFFSCREEN_BULLETS(bullets);
+			for (Bullet& b : bullets) {
+				b.CalculateMotion(millisecondsElapsed);
+				b.Draw(program);
+			}
 			SDL_GL_SwapWindow(displayWindow);
 		}
 	}
