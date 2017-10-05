@@ -165,9 +165,7 @@ int main(int argc, char *argv[])
 	Entity::SetBox(startScreenTexCoords, 0.0f, 1.0f, 1.0f, 0.0f);
 
 	// Create the player's cannon
-	PlayerLaserCannon player(spriteSheet);
-	// It starts in the middle of the screen. Move it down.
-	player.MoveY(-3.2f);
+	PlayerLaserCannon player(spriteSheet, 0.0f, -3.2f);
 
 	// Use linked lists to store active sprites.
 	std::forward_list<Bullet> bullets;

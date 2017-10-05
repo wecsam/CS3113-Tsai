@@ -81,9 +81,11 @@ void Entity::SetBox(float* a, float top, float right, float bottom, float left) 
 	SetBoxRight(a, right);
 	SetBoxBottom(a, bottom);
 }
-Entity::Entity(GLuint spriteSheet, float x, float y, float width, float height, float scale = 1.0f) {
+Entity::Entity(GLuint spriteSheet, float spriteSheetX, float spriteSheetY, float spriteWidthPx, float spriteHeightPx, float scale, float orthoPositionX, float orthoPositionY) {
 	SetSpriteSheet(spriteSheet);
-	SetSprite(x, y, width, height, scale);
+	SetSprite(spriteSheetX, spriteSheetY, spriteWidthPx, spriteHeightPx, scale);
+	MoveX(orthoPositionX);
+	MoveY(orthoPositionY);
 }
 void Entity::MoveX(float dx) {
 	SetBoxLeft(vertices, GetLeftBoxBound() + dx);
@@ -114,8 +116,8 @@ void Entity::SetSprite(float x, float y, float width, float height, float scale 
 	GetCenter(centerX, centerY);
 	SetBox(vertices, centerY + orthoYBound, centerX + orthoXBound, centerY - orthoYBound, centerX - orthoXBound);
 }
-PlayerLaserCannon::PlayerLaserCannon(GLuint spriteSheet) :
-	Entity(spriteSheet, 3.0f, 90.0f, 111.0f, 74.0f, SPRITE_SCALE) {}
+PlayerLaserCannon::PlayerLaserCannon(GLuint spriteSheet, float orthoPositionX, float orthoPositionY) :
+	Entity(spriteSheet, 3.0f, 90.0f, 111.0f, 74.0f, SPRITE_SCALE, orthoPositionX, orthoPositionY) {}
 void PlayerLaserCannon::CalculateMotion(Uint32 millisecondsElapsed) {
 	// Change the velocity based on the current movement type.
 	switch (CurrentMovement) {
@@ -169,10 +171,8 @@ void PlayerLaserCannon::ShowThrustRight() {
 		CurrentThrust = RIGHT;
 	}
 }
-Bullet::Bullet(GLuint spriteSheet, bool fromPlayer, float x, float y) :
-	Entity(spriteSheet, 177.0f, 25.0f, 12.0f, 64.0f, SPRITE_SCALE) {
-	MoveX(x);
-	MoveY(y);
+Bullet::Bullet(GLuint spriteSheet, bool fromPlayer, float orthoPositionX, float orthoPositionY) :
+	Entity(spriteSheet, 177.0f, 25.0f, 12.0f, 64.0f, SPRITE_SCALE, orthoPositionX, orthoPositionY) {
 	velocity = fromPlayer ? 0.012f : -0.01f;
 }
 bool Bullet::IsOffScreen() const {
