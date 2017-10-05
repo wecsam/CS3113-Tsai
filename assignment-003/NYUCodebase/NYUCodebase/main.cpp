@@ -14,6 +14,9 @@
 #include "ShaderProgram.h"
 #include "GameEntity.h"
 #include "Dimensions.h"
+#define START_SCREEN_TOP PIXEL_FROM_TOP_TO_ORTHO(100)
+#define START_SCREEN_BOTTOM PIXEL_FROM_BOTTOM_TO_ORTHO(370)
+#define START_SCREEN_LEFT_RIGHT PIXEL_FROM_RIGHT_TO_ORTHO(40)
 
 // From assignment 1
 GLuint LoadTexture(const char *filePath) {
@@ -96,12 +99,12 @@ int main(int argc, char *argv[])
 	// 40 pixels from right of screen
 	// 370 pixels from bottom of screen
 	float startScreenVertices[] = {
-		ORTHO_X_BOUND * (80.0f / WIDTH - 1.0f), ORTHO_Y_BOUND * (1.0f - 200.0f / HEIGHT),
-		ORTHO_X_BOUND * (80.0f / WIDTH - 1.0f), ORTHO_Y_BOUND * (740.0f / HEIGHT - 1.0f),
-		ORTHO_X_BOUND * (1.0f - 80.0f / WIDTH), ORTHO_Y_BOUND * (1.0f - 200.0f / HEIGHT),
-		ORTHO_X_BOUND * (1.0f - 80.0f / WIDTH), ORTHO_Y_BOUND * (1.0f - 200.0f / HEIGHT),
-		ORTHO_X_BOUND * (80.0f / WIDTH - 1.0f), ORTHO_Y_BOUND * (740.0f / HEIGHT - 1.0f),
-		ORTHO_X_BOUND * (1.0f - 80.0f / WIDTH), ORTHO_Y_BOUND * (740.0f / HEIGHT - 1.0f)
+		-START_SCREEN_LEFT_RIGHT, START_SCREEN_TOP,
+		-START_SCREEN_LEFT_RIGHT, START_SCREEN_BOTTOM,
+		START_SCREEN_LEFT_RIGHT,  START_SCREEN_TOP,
+		START_SCREEN_LEFT_RIGHT,  START_SCREEN_TOP,
+		-START_SCREEN_LEFT_RIGHT, START_SCREEN_BOTTOM,
+		START_SCREEN_LEFT_RIGHT,  START_SCREEN_BOTTOM
 	};
 	float startScreenTexCoords[] = {
 		0.0f, 0.0f,
