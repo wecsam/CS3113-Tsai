@@ -163,6 +163,8 @@ int main(int argc, char *argv[])
 					else if (b.GetLeftBoxBound() <= -START_SCREEN_BUTTON_INNER && b.GetRightBoxBound() >= -START_SCREEN_BUTTON_OUTER) {
 						// The bullet hit the Start button.
 						mode = GAME_MODE_PLAY;
+						// Move the bullet off the screen.
+						b.MoveY(ORTHO_Y_BOUND * 2);
 					}
 				}
 				// Draw the bullet.
