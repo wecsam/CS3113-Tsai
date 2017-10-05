@@ -92,7 +92,7 @@ bool DrawText(ShaderProgram& program, GLuint charactersT, const std::string& tex
 		return false;
 	}
 	// Add each character to the arrays.
-	float top = PIXEL_FROM_TOP_TO_ORTHO((baselineStartPixelY - CHARACTERS_BASELINE));
+	float top = PIXEL_FROM_TOP_TO_ORTHO((baselineStartPixelY - CHARACTERS_BASELINE * scale));
 	for (size_t i = 0; i < text.size(); ++i) {
 		// Set the vertices.
 		float left = PIXEL_FROM_LEFT_TO_ORTHO((baselineStartPixelX + CHARACTERS_WIDTH * i * scale));
@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
 			}
 			glClear(GL_COLOR_BUFFER_BIT);
 			// Draw player's current score
-			DrawText(program, charactersT, "Score: " + std::to_string(score), 20.0f, 78.89f, 0.5f);
+			DrawText(program, charactersT, "Score: " + std::to_string(score), 20.0f, 49.445f, 0.5f);
 			SDL_GL_SwapWindow(displayWindow);
 		}
 	}
