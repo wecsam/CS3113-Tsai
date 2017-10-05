@@ -156,8 +156,10 @@ int main(int argc, char *argv[])
 			// Draw player
 			player.CalculateMotion(millisecondsElapsed);
 			player.Draw(program);
+			// Delete bullets that have gone off the screen.
+			bullets.remove_if([](const Bullet& b) { return b.IsOffScreen(); });
 			// Draw bullets
-			for (auto i = bullets.begin(); i != bullets.end();) {
+			for (auto i = bullets.begin(); i != bullets.end(); i++) {
 				i->CalculateMotion(millisecondsElapsed);
 				// Check whether the bullet has hit one of the buttons.
 				if (i->GetTopBoxBound() > START_SCREEN_BOTTOM) {
@@ -170,14 +172,8 @@ int main(int argc, char *argv[])
 						mode = GAME_MODE_PLAY;
 					}
 				}
-				// If the bullet is off-screen, delete it. Otherwise, draw it.
-				if (i->IsOffScreen()) {
-					i = bullets.erase(i);
-				}
-				else {
-					i->Draw(program);
-					i++;
-				}
+				// Draw the bullet.
+				i->Draw(program);
 			}
 			SDL_GL_SwapWindow(displayWindow);
 		}
