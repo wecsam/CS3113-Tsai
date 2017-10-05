@@ -37,7 +37,7 @@ private:
 	// Each triangle has three vertices.
 	// Each vertex has two floats.
 	// That makes 12 floats total in the vertex array.
-	enum VERTEX_INDICES {
+	enum VertexIndices {
 		T1_TOP_LEFT_X,
 		T1_TOP_LEFT_Y,
 		T1_BOTTOM_LEFT_X,
@@ -52,8 +52,8 @@ private:
 		T2_BOTTOM_RIGHT_Y,
 		NUM_VERTICES
 	};
-	float vertices[VERTEX_INDICES::NUM_VERTICES] = { 0.0f };
-	float texCoords[VERTEX_INDICES::NUM_VERTICES];
+	float vertices[VertexIndices::NUM_VERTICES] = { 0.0f };
+	float texCoords[VertexIndices::NUM_VERTICES];
 	GLuint spriteSheet;
 };
 class PlayerLaserCannon : public Entity {
@@ -63,14 +63,14 @@ public:
 	void ShowNoThrust();
 	void ShowThrustLeft();
 	void ShowThrustRight();
-	enum MOVEMENTS {
+	enum Movements {
 		STATIONARY,
 		LEFT,
 		RIGHT
 	};
-	MOVEMENTS CurrentMovement = MOVEMENTS::STATIONARY;
+	Movements CurrentMovement = Movements::STATIONARY;
 private:
-	MOVEMENTS CurrentThrust = MOVEMENTS::STATIONARY;
+	Movements CurrentThrust = Movements::STATIONARY;
 	float velocity = 0.0f;
 };
 class Bullet : public Entity {
@@ -83,11 +83,11 @@ private:
 };
 class Invader : public Entity {
 public:
-	enum INVADER_TYPE {
+	enum InvaderType {
 		BACK,
 		MIDDLE,
 		FRONT
 	};
-	Invader(GLuint, INVADER_TYPE);
+	Invader(GLuint, InvaderType);
 	void CalculateMotion(Uint32);
 };

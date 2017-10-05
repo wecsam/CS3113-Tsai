@@ -20,16 +20,16 @@ void Entity::UVWrap::GetTextureCoordinates(float* texCoords) const {
 	SetBoxBottom(texCoords, V + Height);
 }
 float Entity::GetLeftBoxBound() const {
-	return vertices[VERTEX_INDICES::T1_TOP_LEFT_X];
+	return vertices[VertexIndices::T1_TOP_LEFT_X];
 }
 float Entity::GetRightBoxBound() const {
-	return vertices[VERTEX_INDICES::T1_TOP_RIGHT_X];
+	return vertices[VertexIndices::T1_TOP_RIGHT_X];
 }
 float Entity::GetTopBoxBound() const {
-	return vertices[VERTEX_INDICES::T1_TOP_LEFT_Y];
+	return vertices[VertexIndices::T1_TOP_LEFT_Y];
 }
 float Entity::GetBottomBoxBound() const {
-	return vertices[VERTEX_INDICES::T1_BOTTOM_LEFT_Y];
+	return vertices[VertexIndices::T1_BOTTOM_LEFT_Y];
 }
 bool Entity::IsCollidingWith(const Entity& other) const {
 	return !(
@@ -55,27 +55,27 @@ void Entity::GetCenter(float& x, float& y) const {
 	y = (GetTopBoxBound() + GetBottomBoxBound()) / 2.0f;
 }
 void Entity::SetBoxLeft(float* a, float x) {
-	a[VERTEX_INDICES::T1_TOP_LEFT_X] =
-		a[VERTEX_INDICES::T1_BOTTOM_LEFT_X] =
-		a[VERTEX_INDICES::T2_BOTTOM_LEFT_X] =
+	a[VertexIndices::T1_TOP_LEFT_X] =
+		a[VertexIndices::T1_BOTTOM_LEFT_X] =
+		a[VertexIndices::T2_BOTTOM_LEFT_X] =
 		x;
 }
 void Entity::SetBoxRight(float* a, float x) {
-	a[VERTEX_INDICES::T1_TOP_RIGHT_X] =
-		a[VERTEX_INDICES::T2_TOP_RIGHT_X] =
-		a[VERTEX_INDICES::T2_BOTTOM_RIGHT_X] =
+	a[VertexIndices::T1_TOP_RIGHT_X] =
+		a[VertexIndices::T2_TOP_RIGHT_X] =
+		a[VertexIndices::T2_BOTTOM_RIGHT_X] =
 		x;
 }
 void Entity::SetBoxTop(float* a, float y) {
-	a[VERTEX_INDICES::T1_TOP_LEFT_Y] =
-		a[VERTEX_INDICES::T1_TOP_RIGHT_Y] =
-		a[VERTEX_INDICES::T2_TOP_RIGHT_Y] =
+	a[VertexIndices::T1_TOP_LEFT_Y] =
+		a[VertexIndices::T1_TOP_RIGHT_Y] =
+		a[VertexIndices::T2_TOP_RIGHT_Y] =
 		y;
 }
 void Entity::SetBoxBottom(float* a, float y) {
-	a[VERTEX_INDICES::T1_BOTTOM_LEFT_Y] =
-		a[VERTEX_INDICES::T2_BOTTOM_LEFT_Y] =
-		a[VERTEX_INDICES::T2_BOTTOM_RIGHT_Y] =
+	a[VertexIndices::T1_BOTTOM_LEFT_Y] =
+		a[VertexIndices::T2_BOTTOM_LEFT_Y] =
+		a[VertexIndices::T2_BOTTOM_RIGHT_Y] =
 		y;
 }
 Entity::Entity(GLuint spriteSheet, float x, float y, float width, float height, float scale = 1.0f) {
@@ -184,7 +184,7 @@ void Bullet::CalculateMotion(Uint32 millisecondsElapsed) {
 	// Just move at a constant velocity.
 	MoveY(velocity * millisecondsElapsed);
 }
-Invader::Invader(GLuint spriteSheet, INVADER_TYPE invaderType) :
+Invader::Invader(GLuint spriteSheet, InvaderType invaderType) :
 	Entity(spriteSheet, 114.0f, 120.0f + invaderType * 64.0f, 84.0f, 64.0f, SPRITE_SCALE) {}
 void Invader::CalculateMotion(Uint32 millisecondsElapsed) {
 	// TODO

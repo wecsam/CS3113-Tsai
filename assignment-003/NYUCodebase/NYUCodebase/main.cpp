@@ -65,13 +65,13 @@ bool ProcessInput(GLuint spriteSheet, PlayerLaserCannon& player, std::list<Bulle
 	// Poll for pressed keys.
 	const Uint8* keys = SDL_GetKeyboardState(NULL);
 	if (keys[SDL_SCANCODE_LEFT]) {
-		player.CurrentMovement = PlayerLaserCannon::MOVEMENTS::LEFT;
+		player.CurrentMovement = PlayerLaserCannon::Movements::LEFT;
 	}
 	else if (keys[SDL_SCANCODE_RIGHT]) {
-		player.CurrentMovement = PlayerLaserCannon::MOVEMENTS::RIGHT;
+		player.CurrentMovement = PlayerLaserCannon::Movements::RIGHT;
 	}
 	else {
-		player.CurrentMovement = PlayerLaserCannon::MOVEMENTS::STATIONARY;
+		player.CurrentMovement = PlayerLaserCannon::Movements::STATIONARY;
 	}
 	return false;
 }
