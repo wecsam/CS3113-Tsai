@@ -166,15 +166,19 @@ int main(int argc, char *argv[])
 	Entity::SetBox(startScreenVertices, START_SCREEN_TOP, START_SCREEN_LEFT_RIGHT, START_SCREEN_BOTTOM, -START_SCREEN_LEFT_RIGHT);
 	Entity::SetBox(startScreenTexCoords, 0.0f, 1.0f, 1.0f, 0.0f);
 
-	// Create the player's cannon
-	PlayerLaserCannon player(spriteSheet, 0.0f, -3.2f);
-
-	// Use linked lists to store active sprites.
-	std::forward_list<Bullet> bullets;
-
 	// Main game loops
 	GameMode mode = GAME_MODE_START;
 	while (mode != GAME_MODE_QUIT && mode < NUM_GAME_MODES) {
+		PlayerLaserCannon player(spriteSheet, 0.0f, -3.2f);
+		std::forward_list<Bullet> bullets;
+		Lives lives(
+			spriteSheet,
+			player.GetWidth(),
+			4,
+			PIXEL_FROM_LEFT_TO_ORTHO((20.0f + CHARACTERS_WIDTH * 4.0f)),
+			PIXEL_FROM_TOP_TO_ORTHO((HEIGHT - 20.555f - CHARACTERS_BASELINE * 0.5f)) - PIXEL_TO_ORTHO_Y((CHARACTERS_BASELINE * 0.5f)) + player.GetHeight() * 0.4797297418f
+		);
+		unsigned int score = 0;
 		// Loop for the start screen
 		while (mode == GAME_MODE_START) {
 			Uint32 millisecondsElapsed = MillisecondsElapsed();
@@ -217,14 +221,6 @@ int main(int argc, char *argv[])
 			SDL_GL_SwapWindow(displayWindow);
 		}
 		// Loop for gameplay
-		Lives lives(
-			spriteSheet,
-			player.GetWidth(),
-			4,
-			PIXEL_FROM_LEFT_TO_ORTHO((20.0f + CHARACTERS_WIDTH * 4.0f)),
-			PIXEL_FROM_TOP_TO_ORTHO((HEIGHT - 20.555f - CHARACTERS_BASELINE * 0.5f)) - PIXEL_TO_ORTHO_Y((CHARACTERS_BASELINE * 0.5f)) + player.GetHeight() * 0.4797297418f
-		);
-		unsigned int score = 0;
 		while (mode == GAME_MODE_PLAY) {
 			Uint32 millisecondsElapsed = MillisecondsElapsed();
 			if (ProcessInput(spriteSheet, player, bullets)) {
