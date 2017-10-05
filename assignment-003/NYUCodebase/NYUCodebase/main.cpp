@@ -17,6 +17,14 @@
 #define START_SCREEN_TOP PIXEL_FROM_TOP_TO_ORTHO(100)
 #define START_SCREEN_BOTTOM PIXEL_FROM_BOTTOM_TO_ORTHO(370)
 #define START_SCREEN_LEFT_RIGHT PIXEL_FROM_RIGHT_TO_ORTHO(40)
+#define START_SCREEN_BUTTON_OUTER (164.0f / 260.25f * START_SCREEN_LEFT_RIGHT)
+#define START_SCREEN_BUTTON_INNER (66.0f / 260.25f * START_SCREEN_LEFT_RIGHT)
+enum GameMode {
+	GAME_MODE_QUIT,
+	GAME_MODE_START,
+	GAME_MODE_PLAY,
+	NUM_GAME_MODES
+};
 
 // From assignment 1
 GLuint LoadTexture(const char *filePath) {
@@ -125,13 +133,16 @@ int main(int argc, char *argv[])
 
 	// Main game loops
 	Uint32 lastFrameTick = 0;
-	bool done = false;
-	while (!done) {
+	GameMode mode = GAME_MODE_START;
+	while (mode != GAME_MODE_QUIT && mode < NUM_GAME_MODES) {
 		// Loop for the start screen
-		while (!done) {
+		while (mode == GAME_MODE_START) {
 			Uint32 thisFrameTick = SDL_GetTicks(), millisecondsElapsed = thisFrameTick - lastFrameTick;
 			lastFrameTick = thisFrameTick;
-			done = ProcessInput(spriteSheet, player, bullets);
+			if (ProcessInput(spriteSheet, player, bullets)) {
+				mode = GAME_MODE_QUIT;
+				break;
+			}
 			glClear(GL_COLOR_BUFFER_BIT);
 			// Draw start screen
 			glVertexAttribPointer(program.positionAttribute, 2, GL_FLOAT, false, 0, startScreenVertices);
@@ -148,6 +159,18 @@ int main(int argc, char *argv[])
 			// Draw bullets
 			for (auto i = bullets.begin(); i != bullets.end();) {
 				i->CalculateMotion(millisecondsElapsed);
+				// Check whether the bullet has hit one of the buttons.
+				if (i->GetTopBoxBound() > START_SCREEN_BOTTOM) {
+					if (i->GetLeftBoxBound() <= START_SCREEN_BUTTON_OUTER && i->GetRightBoxBound() >= START_SCREEN_BUTTON_INNER) {
+						// The bullet hit the Quit button.
+						mode = GAME_MODE_QUIT;
+					}
+					else if (i->GetLeftBoxBound() <= -START_SCREEN_BUTTON_INNER && i->GetRightBoxBound() >= -START_SCREEN_BUTTON_OUTER) {
+						// The bullet hit the Start button.
+						mode = GAME_MODE_PLAY;
+					}
+				}
+				// If the bullet is off-screen, delete it. Otherwise, draw it.
 				if (i->IsOffScreen()) {
 					i = bullets.erase(i);
 				}
@@ -160,6 +183,10 @@ int main(int argc, char *argv[])
 		}
 		// Loop for gameplay
 		// TODO
+		while (mode == GAME_MODE_PLAY) {
+			// For now, just exit.
+			mode = GAME_MODE_QUIT;
+		}
 	}
 
 	SDL_Quit();
