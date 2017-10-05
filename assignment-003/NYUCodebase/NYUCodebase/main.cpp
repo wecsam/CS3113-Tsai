@@ -152,21 +152,21 @@ int main(int argc, char *argv[])
 			// Delete bullets that have gone off the screen.
 			bullets.remove_if([](const Bullet& b) { return b.IsOffScreen(); });
 			// Draw bullets
-			for (auto i = bullets.begin(); i != bullets.end(); i++) {
-				i->CalculateMotion(millisecondsElapsed);
+			for (Bullet& b : bullets) {
+				b.CalculateMotion(millisecondsElapsed);
 				// Check whether the bullet has hit one of the buttons.
-				if (i->GetTopBoxBound() > START_SCREEN_BOTTOM) {
-					if (i->GetLeftBoxBound() <= START_SCREEN_BUTTON_OUTER && i->GetRightBoxBound() >= START_SCREEN_BUTTON_INNER) {
+				if (b.GetTopBoxBound() > START_SCREEN_BOTTOM) {
+					if (b.GetLeftBoxBound() <= START_SCREEN_BUTTON_OUTER && b.GetRightBoxBound() >= START_SCREEN_BUTTON_INNER) {
 						// The bullet hit the Quit button.
 						mode = GAME_MODE_QUIT;
 					}
-					else if (i->GetLeftBoxBound() <= -START_SCREEN_BUTTON_INNER && i->GetRightBoxBound() >= -START_SCREEN_BUTTON_OUTER) {
+					else if (b.GetLeftBoxBound() <= -START_SCREEN_BUTTON_INNER && b.GetRightBoxBound() >= -START_SCREEN_BUTTON_OUTER) {
 						// The bullet hit the Start button.
 						mode = GAME_MODE_PLAY;
 					}
 				}
 				// Draw the bullet.
-				i->Draw(program);
+				b.Draw(program);
 			}
 			SDL_GL_SwapWindow(displayWindow);
 		}
