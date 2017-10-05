@@ -177,8 +177,7 @@ Bullet::Bullet(GLuint spriteSheet, bool fromPlayer, float x, float y) :
 }
 bool Bullet::IsOffScreen() const {
 	// Bullets can't travel sideways in this game, so we only need to check the Y position.
-	return GetTopBoxBound() < -ORTHO_Y_BOUND ||
-		GetBottomBoxBound() > ORTHO_Y_BOUND;
+	return GetBottomBoxBound() > ORTHO_Y_BOUND || GetTopBoxBound() < -ORTHO_Y_BOUND;
 }
 void Bullet::CalculateMotion(Uint32 millisecondsElapsed) {
 	// A bullet has no on-board propulsion, and the game is set in space.
