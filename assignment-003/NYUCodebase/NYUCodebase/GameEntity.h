@@ -15,6 +15,10 @@ public:
 	void MoveX(float);
 	void MoveY(float);
 	virtual void CalculateMotion(Uint32) = 0;
+	static void SetBoxLeft(float*, float);
+	static void SetBoxRight(float*, float);
+	static void SetBoxTop(float*, float);
+	static void SetBoxBottom(float*, float);
 protected:
 	Entity(GLuint, float, float, float, float, float);
 	// To determine which sprite appears on screen, the texture must be mapped onto this rectangle.
@@ -29,10 +33,6 @@ protected:
 	};
 	UVWrap UV;
 private:
-	static void SetBoxLeft(float*, float);
-	static void SetBoxRight(float*, float);
-	static void SetBoxTop(float*, float);
-	static void SetBoxBottom(float*, float);
 	// Each entity is made of two triangles that form a rectangle together.
 	// Each triangle has three vertices.
 	// Each vertex has two floats.
