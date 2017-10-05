@@ -145,14 +145,7 @@ int main(int argc, char *argv[])
 			}
 			glClear(GL_COLOR_BUFFER_BIT);
 			// Draw start screen
-			glVertexAttribPointer(program.positionAttribute, 2, GL_FLOAT, false, 0, startScreenVertices);
-			glVertexAttribPointer(program.texCoordAttribute, 2, GL_FLOAT, false, 0, startScreenTexCoords);
-			glEnableVertexAttribArray(program.positionAttribute);
-			glEnableVertexAttribArray(program.texCoordAttribute);
-			glBindTexture(GL_TEXTURE_2D, startScreen);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			glDisableVertexAttribArray(program.positionAttribute);
-			glDisableVertexAttribArray(program.texCoordAttribute);
+			DrawTrianglesWithTexture(program, 2, startScreenVertices, startScreenTexCoords, startScreen);
 			// Draw player
 			player.CalculateMotion(millisecondsElapsed);
 			player.Draw(program);

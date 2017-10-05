@@ -4,6 +4,17 @@
 #define CHARACTERS_SHEET_WIDTH 640.0f // pixels
 #define CHARACTERS_SHEET_HEIGHT 1120.0f // pixels
 
+void DrawTrianglesWithTexture(ShaderProgram& program, GLsizei numTriangles, const float* vertices, const float* texCoords, GLuint textureID) {
+	glVertexAttribPointer(program.positionAttribute, 2, GL_FLOAT, false, 0, vertices);
+	glVertexAttribPointer(program.texCoordAttribute, 2, GL_FLOAT, false, 0, texCoords);
+	glEnableVertexAttribArray(program.positionAttribute);
+	glEnableVertexAttribArray(program.texCoordAttribute);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	glDrawArrays(GL_TRIANGLES, 0, 3 * numTriangles);
+	glDisableVertexAttribArray(program.positionAttribute);
+	glDisableVertexAttribArray(program.texCoordAttribute);
+}
+
 bool DrawText(ShaderProgram& program, GLuint charactersT, const std::string& text, float baselineStartPixelX, float baselineStartPixelY, float scale) {
 	// Dynamically allocate arrays of floats in memory for the vertices and texture coordinates.
 	size_t s = 12 * sizeof(float) * text.size();
@@ -29,14 +40,7 @@ bool DrawText(ShaderProgram& program, GLuint charactersT, const std::string& tex
 		uv.GetTextureCoordinates(texCoords + i * 12);
 	}
 	// Draw the arrays.
-	glVertexAttribPointer(program.positionAttribute, 2, GL_FLOAT, false, 0, vertices);
-	glVertexAttribPointer(program.texCoordAttribute, 2, GL_FLOAT, false, 0, texCoords);
-	glEnableVertexAttribArray(program.positionAttribute);
-	glEnableVertexAttribArray(program.texCoordAttribute);
-	glBindTexture(GL_TEXTURE_2D, charactersT);
-	glDrawArrays(GL_TRIANGLES, 0, 6 * text.size());
-	glDisableVertexAttribArray(program.positionAttribute);
-	glDisableVertexAttribArray(program.texCoordAttribute);
+	DrawTrianglesWithTexture(program, 2 * text.size(), vertices, texCoords, charactersT);
 	// Free the allocated arrays.
 	free(vertices);
 	free(texCoords);

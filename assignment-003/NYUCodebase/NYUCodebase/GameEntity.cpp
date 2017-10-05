@@ -3,6 +3,7 @@
 #endif
 #include "GameEntity.h"
 #include "Dimensions.h"
+#include "Draw.h"
 #define SPRITE_SCALE 0.5f
 #define PLAYER_ACCEL 0.0000125f
 #define PLAYER_BRAKE 0.01f
@@ -43,15 +44,7 @@ bool Entity::IsCollidingWith(const Entity& other) const {
 		);
 }
 void Entity::Draw(ShaderProgram& program) const {
-	// Here are the actual draw calls.
-	glVertexAttribPointer(program.positionAttribute, 2, GL_FLOAT, false, 0, vertices);
-	glVertexAttribPointer(program.texCoordAttribute, 2, GL_FLOAT, false, 0, texCoords);
-	glEnableVertexAttribArray(program.positionAttribute);
-	glEnableVertexAttribArray(program.texCoordAttribute);
-	glBindTexture(GL_TEXTURE_2D, spriteSheet);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-	glDisableVertexAttribArray(program.positionAttribute);
-	glDisableVertexAttribArray(program.texCoordAttribute);
+	DrawTrianglesWithTexture(program, 2, vertices, texCoords, spriteSheet);
 }
 void Entity::GetCenter(float& x, float& y) const {
 	x = (GetLeftBoxBound() + GetRightBoxBound()) / 2.0f;
