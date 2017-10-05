@@ -1,5 +1,5 @@
 #include <iostream>
-#include <list>
+#include <forward_list>
 #ifdef _WINDOWS
 	#define RESOURCE_FOLDER ""
 	#include <GL/glew.h>
@@ -44,7 +44,7 @@ GLuint LoadTexture(const char *filePath) {
 	return result;
 }
 
-bool ProcessInput(GLuint spriteSheet, PlayerLaserCannon& player, std::list<Bullet>& bullets) {
+bool ProcessInput(GLuint spriteSheet, PlayerLaserCannon& player, std::forward_list<Bullet>& bullets) {
 	// Scan for input events.
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 	player.MoveY(-3.2f);
 
 	// Use linked lists to store active sprites.
-	std::list<Bullet> bullets;
+	std::forward_list<Bullet> bullets;
 
 	// Main game loops
 	Uint32 lastFrameTick = 0;
