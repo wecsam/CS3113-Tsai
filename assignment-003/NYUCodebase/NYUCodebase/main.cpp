@@ -107,14 +107,8 @@ int main(int argc, char *argv[])
 	// 40 pixels from right of screen
 	// 370 pixels from bottom of screen
 	float startScreenVertices[12], startScreenTexCoords[12];
-	Entity::SetBoxLeft(startScreenVertices, -START_SCREEN_LEFT_RIGHT);
-	Entity::SetBoxRight(startScreenVertices, START_SCREEN_LEFT_RIGHT);
-	Entity::SetBoxTop(startScreenVertices, START_SCREEN_TOP);
-	Entity::SetBoxBottom(startScreenVertices, START_SCREEN_BOTTOM);
-	Entity::SetBoxLeft(startScreenTexCoords, 0.0f);
-	Entity::SetBoxRight(startScreenTexCoords, 1.0f);
-	Entity::SetBoxTop(startScreenTexCoords, 0.0f);
-	Entity::SetBoxBottom(startScreenTexCoords, 1.0f);
+	Entity::SetBox(startScreenVertices, START_SCREEN_TOP, START_SCREEN_LEFT_RIGHT, START_SCREEN_BOTTOM, -START_SCREEN_LEFT_RIGHT);
+	Entity::SetBox(startScreenTexCoords, 0.0f, 1.0f, 1.0f, 0.0f);
 
 	// Create the player's cannon
 	PlayerLaserCannon player(spriteSheet);

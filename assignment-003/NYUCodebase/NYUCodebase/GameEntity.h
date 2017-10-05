@@ -19,6 +19,7 @@ public:
 	static void SetBoxRight(float*, float);
 	static void SetBoxTop(float*, float);
 	static void SetBoxBottom(float*, float);
+	static void SetBox(float*, float top, float right, float bottom, float left);
 protected:
 	Entity(GLuint, float, float, float, float, float);
 	// To determine which sprite appears on screen, the texture must be mapped onto this rectangle.

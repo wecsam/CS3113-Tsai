@@ -14,10 +14,7 @@ Entity::UVWrap::UVWrap() {}
 Entity::UVWrap::UVWrap(float U, float V, float Width, float Height) :
 	U(U), V(V), Width(Width), Height(Height) {}
 void Entity::UVWrap::GetTextureCoordinates(float* texCoords) const {
-	SetBoxLeft(texCoords, U);
-	SetBoxRight(texCoords, U + Width);
-	SetBoxTop(texCoords, V);
-	SetBoxBottom(texCoords, V + Height);
+	SetBox(texCoords, V, U + Width, V + Height, U);
 }
 float Entity::GetLeftBoxBound() const {
 	return vertices[VertexIndices::T1_TOP_LEFT_X];
@@ -78,6 +75,12 @@ void Entity::SetBoxBottom(float* a, float y) {
 		a[VertexIndices::T2_BOTTOM_RIGHT_Y] =
 		y;
 }
+void Entity::SetBox(float* a, float top, float right, float bottom, float left) {
+	SetBoxTop(a, top);
+	SetBoxLeft(a, left);
+	SetBoxRight(a, right);
+	SetBoxBottom(a, bottom);
+}
 Entity::Entity(GLuint spriteSheet, float x, float y, float width, float height, float scale = 1.0f) {
 	SetSpriteSheet(spriteSheet);
 	SetSprite(x, y, width, height, scale);
@@ -109,10 +112,7 @@ void Entity::SetSprite(float x, float y, float width, float height, float scale 
 		orthoYBound = scale * height / HEIGHT * ORTHO_Y_BOUND,
 		centerX, centerY;
 	GetCenter(centerX, centerY);
-	SetBoxLeft(vertices, centerX - orthoXBound);
-	SetBoxRight(vertices, centerX + orthoXBound);
-	SetBoxTop(vertices, centerY + orthoYBound);
-	SetBoxBottom(vertices, centerY - orthoYBound);
+	SetBox(vertices, centerY + orthoYBound, centerX + orthoXBound, centerY - orthoYBound, centerX - orthoXBound);
 }
 PlayerLaserCannon::PlayerLaserCannon(GLuint spriteSheet) :
 	Entity(spriteSheet, 3.0f, 90.0f, 111.0f, 74.0f, SPRITE_SCALE) {}
