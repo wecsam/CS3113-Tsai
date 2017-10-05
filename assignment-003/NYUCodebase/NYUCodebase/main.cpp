@@ -1,5 +1,7 @@
-#include <iostream>
+#include <cstdlib>
 #include <forward_list>
+#include <iostream>
+#include <string>
 #ifdef _WINDOWS
 	#define RESOURCE_FOLDER ""
 	#include <GL/glew.h>
@@ -19,6 +21,11 @@
 #define START_SCREEN_LEFT_RIGHT PIXEL_FROM_RIGHT_TO_ORTHO(40)
 #define START_SCREEN_BUTTON_OUTER (164.0f / 260.25f * START_SCREEN_LEFT_RIGHT)
 #define START_SCREEN_BUTTON_INNER (66.0f / 260.25f * START_SCREEN_LEFT_RIGHT)
+#define CHARACTERS_WIDTH 40.0f // pixels
+#define CHARACTERS_HEIGHT 80.0f // pixels
+#define CHARACTERS_BASELINE 58.89f // pixels from top of line
+#define CHARACTERS_SHEET_WIDTH 640.0f // pixels
+#define CHARACTERS_SHEET_HEIGHT 1120.0f // pixels
 enum GameMode {
 	GAME_MODE_QUIT,
 	GAME_MODE_START,
@@ -76,6 +83,52 @@ bool ProcessInput(GLuint spriteSheet, PlayerLaserCannon& player, std::forward_li
 	return false;
 }
 
+bool DrawText(ShaderProgram& program, GLuint charactersT, const std::string& text, float baselineStartPixelX, float baselineStartPixelY, float scale = 1.0f) {
+	// Dynamically allocate arrays of floats in memory for the vertices and texture coordinates.
+	size_t s = 12 * sizeof(float) * text.size();
+	float* vertices = (float*)malloc(s);
+	float* texCoords = (float*)malloc(s);
+	if (!(vertices && texCoords)) {
+		return false;
+	}
+	// Add each character to the arrays.
+	float top = PIXEL_FROM_TOP_TO_ORTHO((baselineStartPixelY - CHARACTERS_BASELINE));
+	for (size_t i = 0; i < text.size(); ++i) {
+		// Set the vertices.
+		float left = PIXEL_FROM_LEFT_TO_ORTHO((baselineStartPixelX + CHARACTERS_WIDTH * i * scale));
+		Entity::SetBox(vertices + i * 12, top, left + PIXEL_TO_ORTHO_X((CHARACTERS_WIDTH * scale)), top - PIXEL_TO_ORTHO_Y((CHARACTERS_HEIGHT * scale)), left);
+		// Set the texture coordinates.
+		div_t gridPosition = div(text[i], 16);
+		Entity::UVWrap uv(
+			CHARACTERS_WIDTH / CHARACTERS_SHEET_WIDTH * gridPosition.rem,
+			CHARACTERS_HEIGHT / CHARACTERS_SHEET_HEIGHT * (gridPosition.quot - 2),
+			CHARACTERS_WIDTH / CHARACTERS_SHEET_WIDTH,
+			CHARACTERS_HEIGHT / CHARACTERS_SHEET_HEIGHT
+		);
+		uv.GetTextureCoordinates(texCoords + i * 12);
+	}
+	// Draw the arrays.
+	glVertexAttribPointer(program.positionAttribute, 2, GL_FLOAT, false, 0, vertices);
+	glVertexAttribPointer(program.texCoordAttribute, 2, GL_FLOAT, false, 0, texCoords);
+	glEnableVertexAttribArray(program.positionAttribute);
+	glEnableVertexAttribArray(program.texCoordAttribute);
+	glBindTexture(GL_TEXTURE_2D, charactersT);
+	glDrawArrays(GL_TRIANGLES, 0, 6 * text.size());
+	glDisableVertexAttribArray(program.positionAttribute);
+	glDisableVertexAttribArray(program.texCoordAttribute);
+	// Free the allocated arrays.
+	free(vertices);
+	free(texCoords);
+	return true;
+}
+
+Uint32 MillisecondsElapsed() {
+	static Uint32 lastFrameTick = 0;
+	Uint32 thisFrameTick = SDL_GetTicks(), result = thisFrameTick - lastFrameTick;
+	lastFrameTick = thisFrameTick;
+	return result;
+}
+
 SDL_Window* displayWindow;
 
 int main(int argc, char *argv[])
@@ -100,6 +153,7 @@ int main(int argc, char *argv[])
 	// Load textures
 	GLuint spriteSheet = LoadTexture(RESOURCE_FOLDER"Images/sprites.png");
 	GLuint startScreen = LoadTexture(RESOURCE_FOLDER"Images/start.png");
+	GLuint charactersT = LoadTexture(RESOURCE_FOLDER"Images/characters.png");
 
 	// Start screen coordinates
 	// 40 pixels from left of screen
@@ -119,13 +173,11 @@ int main(int argc, char *argv[])
 	std::forward_list<Bullet> bullets;
 
 	// Main game loops
-	Uint32 lastFrameTick = 0;
 	GameMode mode = GAME_MODE_START;
 	while (mode != GAME_MODE_QUIT && mode < NUM_GAME_MODES) {
 		// Loop for the start screen
 		while (mode == GAME_MODE_START) {
-			Uint32 thisFrameTick = SDL_GetTicks(), millisecondsElapsed = thisFrameTick - lastFrameTick;
-			lastFrameTick = thisFrameTick;
+			Uint32 millisecondsElapsed = MillisecondsElapsed();
 			if (ProcessInput(spriteSheet, player, bullets)) {
 				mode = GAME_MODE_QUIT;
 				break;
@@ -165,10 +217,17 @@ int main(int argc, char *argv[])
 			SDL_GL_SwapWindow(displayWindow);
 		}
 		// Loop for gameplay
-		// TODO
+		unsigned int score = 0;
 		while (mode == GAME_MODE_PLAY) {
-			// For now, just exit.
-			mode = GAME_MODE_QUIT;
+			Uint32 millisecondsElapsed = MillisecondsElapsed();
+			if (ProcessInput(spriteSheet, player, bullets)) {
+				mode = GAME_MODE_QUIT;
+				break;
+			}
+			glClear(GL_COLOR_BUFFER_BIT);
+			// Draw player's current score
+			DrawText(program, charactersT, "Score: " + std::to_string(score), 20.0f, 78.89f, 0.5f);
+			SDL_GL_SwapWindow(displayWindow);
 		}
 	}
 

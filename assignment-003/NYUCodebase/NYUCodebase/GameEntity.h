@@ -20,18 +20,18 @@ public:
 	static void SetBoxTop(float*, float);
 	static void SetBoxBottom(float*, float);
 	static void SetBox(float*, float top, float right, float bottom, float left);
+	struct UVWrap {
+		float U, V, Width, Height;
+		UVWrap();
+		UVWrap(float U, float V, float Width, float Height);
+		void GetTextureCoordinates(float*) const;
+	};
 protected:
 	Entity(GLuint, float, float, float, float, float);
 	// To determine which sprite appears on screen, the texture must be mapped onto this rectangle.
 	void SetSpriteSheet(GLuint);
 	// To change the sprite, use SetSprite and give it the coordinates of the image.
 	void SetSprite(float, float, float, float, float);
-	struct UVWrap {
-		float U, V, Width, Height;
-		UVWrap();
-		UVWrap(float, float, float, float);
-		void GetTextureCoordinates(float*) const;
-	};
 	UVWrap UV;
 private:
 	// Each entity is made of two triangles that form a rectangle together.
