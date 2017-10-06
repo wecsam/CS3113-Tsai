@@ -91,6 +91,6 @@ public:
 		MIDDLE,
 		FRONT
 	};
-	Invader(GLuint, InvaderType);
+	Invader(GLuint, InvaderType, float orthoPositionX = 0.0f, float orthoPositionY = 0.0f);
 	void CalculateMotion(Uint32);
 };
