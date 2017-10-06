@@ -29,8 +29,13 @@ bool DrawText(ShaderProgram& program, GLuint charactersT, const std::string& tex
 		// Set the vertices.
 		float left = PIXEL_FROM_LEFT_TO_ORTHO((baselineStartPixelX + CHARACTERS_WIDTH * i * scale));
 		Entity::SetBox(vertices + i * 12, top, left + PIXEL_TO_ORTHO_X((CHARACTERS_WIDTH * scale)), top - PIXEL_TO_ORTHO_Y((CHARACTERS_HEIGHT * scale)), left);
+		// Make sure that the character is in range.
+		char c = text[i];
+		if (c < 0x20 || c > 0xff) {
+			c = 0x20;
+		}
 		// Set the texture coordinates.
-		div_t gridPosition = div(text[i], 16);
+		div_t gridPosition = div(c, 16);
 		Entity::UVWrap uv(
 			CHARACTERS_WIDTH / CHARACTERS_SHEET_WIDTH * gridPosition.rem,
 			CHARACTERS_HEIGHT / CHARACTERS_SHEET_HEIGHT * (gridPosition.quot - 2),
