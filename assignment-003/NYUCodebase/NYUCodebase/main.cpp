@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <forward_list>
 #include <iostream>
+#include <list>
 #include <string>
 #include <vector>
 #ifdef _WINDOWS
@@ -30,6 +31,13 @@ enum GameMode {
 	GAME_MODE_START,
 	GAME_MODE_PLAY,
 	NUM_GAME_MODES
+};
+const std::vector<Invader::InvaderType> DESIRED_INVADERS = {
+	Invader::InvaderType::BACK,
+	Invader::InvaderType::MIDDLE,
+	Invader::InvaderType::MIDDLE,
+	Invader::InvaderType::FRONT,
+	Invader::InvaderType::FRONT
 };
 
 // From assignment 1
@@ -127,8 +135,28 @@ int main(int argc, char *argv[])
 	// Main game loops
 	GameMode mode = GAME_MODE_START;
 	while (mode != GAME_MODE_QUIT && mode < NUM_GAME_MODES) {
+		// The player controls this cannon. Bullets shoot from this cannon.
 		PlayerLaserCannon player(spriteSheet, 0.0f, -3.2f);
+		// We only need to be able to add and remove bullets efficiently.
 		std::forward_list<Bullet> bullets;
+		// The invaders come in a grid. The outer list represents the rows.
+		bool invadersGoingRight = true;
+		std::list<std::list<Invader>> invaders;
+		for (size_t row = 0; row < DESIRED_INVADERS.size(); ++row) {
+			// Make a new row at the bottom.
+			invaders.emplace_back();
+			// Fill it with invaders of this type.
+			float y = ORTHO_Y_BOUND - PIXEL_TO_ORTHO_Y(CHARACTERS_HEIGHT) - row * 0.5f;
+			for (int column = 0; column < 10; ++column) {
+				invaders.back().emplace_back(
+					spriteSheet,
+					DESIRED_INVADERS[row],
+					column * 0.5f - ORTHO_X_BOUND + 0.25f,
+					y
+				);
+			}
+		}
+		// In the lower-left corner, one icon will show for each life that is left.
 		Lives lives(
 			spriteSheet,
 			player.GetWidth(),
@@ -136,6 +164,7 @@ int main(int argc, char *argv[])
 			PIXEL_FROM_LEFT_TO_ORTHO((20.0f + CHARACTERS_WIDTH * 4.0f)),
 			PIXEL_FROM_TOP_TO_ORTHO((HEIGHT - 20.555f - CHARACTERS_BASELINE * 0.5f)) - PIXEL_TO_ORTHO_Y((CHARACTERS_BASELINE * 0.5f)) + player.GetHeight() * 0.4797297418f
 		);
+		// The player's score can be kept track of with an int.
 		unsigned int score = 0;
 		// Loop for the start screen
 		while (mode == GAME_MODE_START) {
@@ -187,6 +216,12 @@ int main(int argc, char *argv[])
 			// Draw player
 			player.CalculateMotion(millisecondsElapsed);
 			player.Draw(program);
+			// Draw invaders
+			for (const auto& r : invaders) {
+				for (const Invader& a : r) {
+					a.Draw(program);
+				}
+			}
 			// Draw bullets
 			REMOVE_OFFSCREEN_BULLETS(bullets);
 			for (Bullet& b : bullets) {
