@@ -7,6 +7,7 @@ public:
 	void AddLife();
 	void RemoveLife();
 	void Draw(ShaderProgram&) const;
+	size_t NumberLeft() const;
 private:
 	std::vector<PlayerLaserCannon> icons;
 	const float x;

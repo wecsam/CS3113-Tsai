@@ -21,3 +21,6 @@ void Lives::Draw(ShaderProgram& program) const {
 		p.Draw(program);
 	}
 }
+size_t Lives::NumberLeft() const {
+	return icons.size();
+}
