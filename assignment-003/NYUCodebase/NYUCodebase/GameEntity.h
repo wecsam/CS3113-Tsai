@@ -81,6 +81,7 @@ public:
 	Bullet(GLuint spriteSheet, bool fromPlayer, float orthoPositionX = 0.0f, float orthoPositionY = 0.0f);
 	bool IsOffScreen() const;
 	void CalculateMotion(Uint32);
+	void MoveOffScreen();
 private:
 	float velocity;
 };

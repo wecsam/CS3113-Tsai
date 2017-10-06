@@ -151,7 +151,6 @@ int main(int argc, char *argv[])
 			player.CalculateMotion(millisecondsElapsed);
 			player.Draw(program);
 			// Draw bullets
-			REMOVE_OFFSCREEN_BULLETS(bullets);
 			for (Bullet& b : bullets) {
 				b.CalculateMotion(millisecondsElapsed);
 				// Check whether the bullet has hit one of the buttons.
@@ -163,13 +162,13 @@ int main(int argc, char *argv[])
 					else if (b.GetLeftBoxBound() <= -START_SCREEN_BUTTON_INNER && b.GetRightBoxBound() >= -START_SCREEN_BUTTON_OUTER) {
 						// The bullet hit the Start button.
 						mode = GAME_MODE_PLAY;
-						// Move the bullet off the screen.
-						b.MoveY(ORTHO_Y_BOUND * 2);
+						b.MoveOffScreen();
 					}
 				}
 				// Draw the bullet.
 				b.Draw(program);
 			}
+			REMOVE_OFFSCREEN_BULLETS(bullets);
 			SDL_GL_SwapWindow(displayWindow);
 		}
 		// Loop for gameplay

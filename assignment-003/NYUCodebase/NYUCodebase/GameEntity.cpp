@@ -183,6 +183,9 @@ void Bullet::CalculateMotion(Uint32 millisecondsElapsed) {
 	// Just move at a constant velocity.
 	MoveY(velocity * millisecondsElapsed);
 }
+void Bullet::MoveOffScreen() {
+	MoveY(2 * ORTHO_Y_BOUND);
+}
 Invader::Invader(GLuint spriteSheet, InvaderType invaderType, float orthoPositionX, float orthoPositionY) :
 	Entity(spriteSheet, 114.0f, 120.0f + invaderType * 64.0f, 84.0f, 64.0f, SPRITE_SCALE, orthoPositionX, orthoPositionY) {}
 void Invader::CalculateMotion(Uint32 millisecondsElapsed) {
