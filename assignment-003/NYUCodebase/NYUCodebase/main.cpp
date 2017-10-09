@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
 			}
 			// Draw invaders
 			{
-				register float invaderXDelta = (invadersGoingRight ? 0.0005f : -0.0005f) / invaders.size() * millisecondsElapsed;
+				register float invaderXDelta = (invadersGoingRight ? 0.005f : -0.005f) / invaders.size() / invaders.size() * millisecondsElapsed;
 				register float invaderYDelta = -0.000005 * millisecondsElapsed;
 				for (auto& c : invaders) {
 					for (Invader& a : c) {
