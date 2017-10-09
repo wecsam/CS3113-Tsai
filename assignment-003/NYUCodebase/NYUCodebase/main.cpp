@@ -1,8 +1,10 @@
+#include <chrono>
 #include <cstdlib>
 #include <forward_list>
 #include <iostream>
 #include <list>
 #include <string>
+#include <thread>
 #include <vector>
 #ifdef _WINDOWS
 	#define RESOURCE_FOLDER ""
@@ -92,9 +94,21 @@ bool ProcessInput(GLuint spriteSheet, PlayerLaserCannon& player, std::forward_li
 
 Uint32 MillisecondsElapsed() {
 	static Uint32 lastFrameTick = 0;
-	Uint32 thisFrameTick = SDL_GetTicks(), result = thisFrameTick - lastFrameTick;
-	lastFrameTick = thisFrameTick;
-	return result;
+	Uint32 thisFrameTick, delta;
+	while (true) {
+		// Calculate the number of milliseconds that have elapsed since the last call to this function.
+		thisFrameTick = SDL_GetTicks();
+		delta = thisFrameTick - lastFrameTick;
+		// At 60 FPS, there should be 16.67 milliseconds between frames.
+		// If it has been shorter than 16 milliseconds, sleep.
+		if (delta < 16) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(16 - delta));
+		}
+		else {
+			lastFrameTick = thisFrameTick;
+			return delta;
+		}
+	}
 }
 
 SDL_Window* displayWindow;
