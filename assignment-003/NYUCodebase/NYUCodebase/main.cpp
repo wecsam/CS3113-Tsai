@@ -210,6 +210,22 @@ int main(int argc, char *argv[])
 			// Draw player's number of lives
 			DrawText(program, charactersT, "Lives:", 20.0f, HEIGHT - 20.555f, 0.5f);
 			lives.Draw(program);
+			// Check for bullets hitting the player.
+			for (Bullet& b : bullets) {
+				if (b.GetBottomBoxBound() < player.GetTopBoxBound() &&
+					b.GetLeftBoxBound() <= player.GetRightBoxBound() &&
+					b.GetRightBoxBound() >= player.GetLeftBoxBound()) {
+					// The player was hit!
+					b.MoveOffScreen();
+					lives.RemoveLife();
+					if (!lives.NumberLeft()) {
+						mode = GAME_MODE_START;
+					}
+					// Only allow the player to get hit once per frame.
+					break;
+				}
+			}
+			REMOVE_OFFSCREEN_BULLETS(bullets);
 			// Draw player
 			player.CalculateMotion(millisecondsElapsed);
 			player.Draw(program);
@@ -286,7 +302,6 @@ int main(int argc, char *argv[])
 				}
 			}
 			// Draw bullets
-			REMOVE_OFFSCREEN_BULLETS(bullets);
 			for (Bullet& b : bullets) {
 				b.CalculateMotion(millisecondsElapsed);
 				b.Draw(program);
