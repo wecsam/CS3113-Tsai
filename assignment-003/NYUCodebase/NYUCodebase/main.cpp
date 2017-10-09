@@ -139,20 +139,20 @@ int main(int argc, char *argv[])
 		PlayerLaserCannon player(spriteSheet, 0.0f, -3.2f);
 		// We only need to be able to add and remove bullets efficiently.
 		std::forward_list<Bullet> bullets;
-		// The invaders come in a grid. The outer list represents the rows.
+		// The invaders come in a grid. The outer list represents the columns.
 		bool invadersGoingRight = true;
 		std::list<std::list<Invader>> invaders;
-		for (size_t row = 0; row < DESIRED_INVADERS.size(); ++row) {
-			// Make a new row at the bottom.
+		for (int column = 0; column < 10; ++column) {
+			// Make a new column at the right.
 			invaders.emplace_back();
 			// Fill it with invaders of this type.
-			float y = ORTHO_Y_BOUND - PIXEL_TO_ORTHO_Y(CHARACTERS_HEIGHT) - row * 0.5f;
-			for (int column = 0; column < 10; ++column) {
+			float x = column * 0.5f - ORTHO_X_BOUND + 0.25f;
+			for (size_t row = 0; row < DESIRED_INVADERS.size(); ++row) {
 				invaders.back().emplace_back(
 					spriteSheet,
 					DESIRED_INVADERS[row],
-					column * 0.5f - ORTHO_X_BOUND + 0.25f,
-					y
+					x,
+					ORTHO_Y_BOUND - PIXEL_TO_ORTHO_Y(CHARACTERS_HEIGHT) - row * 0.5f
 				);
 			}
 		}
@@ -217,8 +217,8 @@ int main(int argc, char *argv[])
 			player.CalculateMotion(millisecondsElapsed);
 			player.Draw(program);
 			// Draw invaders
-			for (const auto& r : invaders) {
-				for (const Invader& a : r) {
+			for (const auto& c : invaders) {
+				for (const Invader& a : c) {
 					a.Draw(program);
 				}
 			}
