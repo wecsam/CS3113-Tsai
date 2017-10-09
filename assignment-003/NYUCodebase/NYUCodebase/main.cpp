@@ -29,6 +29,9 @@
 #define START_SCREEN_BUTTON_OUTER (164.0f / 260.25f * START_SCREEN_LEFT_RIGHT)
 #define START_SCREEN_BUTTON_INNER (66.0f / 260.25f * START_SCREEN_LEFT_RIGHT)
 #define REMOVE_OFFSCREEN_BULLETS(bullets) bullets.remove_if([](const Bullet& b) { return b.IsOffScreen(); })
+#define RETALIATE_EVERY_BULLETS 2
+#define MAX_RETALIATION_DISTANCE 0.5f
+#define MIN_RETALIATION_WAIT 100 // milliseconds
 enum GameMode {
 	GAME_MODE_QUIT,
 	GAME_MODE_START,
@@ -122,6 +125,8 @@ int main(int argc, char *argv[])
 		PlayerLaserCannon player(spriteSheet, 0.0f, -3.2f);
 		// We only need to be able to add and remove bullets efficiently.
 		std::forward_list<Bullet> bullets;
+		unsigned int bulletsFired = 0, lastRetaliation = 0;
+		Uint32 lastRetaliationTicks = 0;
 		// The invaders come in a grid. The outer list represents the columns.
 		bool invadersGoingRight = true;
 		std::list<std::vector<Invader>> invaders;
@@ -189,6 +194,7 @@ int main(int argc, char *argv[])
 		while (mode == GAME_MODE_PLAY) {
 			Uint32 millisecondsElapsed = MillisecondsElapsed();
 			Input input;
+			bulletsFired += input.BulletsToFire;
 			if (input.QuitRequested) {
 				mode = GAME_MODE_QUIT;
 				break;
@@ -222,6 +228,27 @@ int main(int argc, char *argv[])
 			else {
 				if (invaders.front().front().GetLeftBoxBound() < -ORTHO_X_BOUND) {
 					invadersGoingRight = true;
+				}
+			}
+			// An invader may shoot back at the player.
+			if (bulletsFired - lastRetaliation > RETALIATE_EVERY_BULLETS && SDL_GetTicks() - lastRetaliationTicks > MIN_RETALIATION_WAIT) {
+				// Find the column whose invaders has the closest X position to the player.
+				register float minDistance = FLT_MAX;
+				const Invader* closestInvader;
+				for (const auto& c : invaders) {
+					if (!c.empty()) {
+						register float curDistance = fabs((c.back().GetLeftBoxBound() + c.back().GetRightBoxBound()) / 2.0f - (player.GetLeftBoxBound() + player.GetRightBoxBound()) / 2.0f);
+						if (curDistance < minDistance) {
+							minDistance = curDistance;
+							closestInvader = &c.back();
+						}
+					}
+				}
+				// Only retaliate if the player is within range.
+				if (minDistance <= MAX_RETALIATION_DISTANCE) {
+					bullets.emplace_front(spriteSheet, false, (closestInvader->GetLeftBoxBound() + closestInvader->GetRightBoxBound()) / 2.0f, closestInvader->GetBottomBoxBound() - 0.2f);
+					lastRetaliation += RETALIATE_EVERY_BULLETS;
+					lastRetaliationTicks = SDL_GetTicks();
 				}
 			}
 			// Check for bullets hitting invaders and invaders reaching the player.
