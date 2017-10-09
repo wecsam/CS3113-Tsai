@@ -12,6 +12,9 @@ Input::Input() {
 			case SDL_SCANCODE_SPACE:
 				++BulletsToFire;
 				break;
+			case SDL_SCANCODE_ESCAPE:
+				EscapePressed = true;
+				break;
 			}
 			break;
 		}

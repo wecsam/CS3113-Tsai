@@ -193,6 +193,10 @@ int main(int argc, char *argv[])
 				mode = GAME_MODE_QUIT;
 				break;
 			}
+			if (input.EscapePressed) {
+				mode = GAME_MODE_START;
+				break;
+			}
 			input.Process(spriteSheet, player, bullets);
 			glClear(GL_COLOR_BUFFER_BIT);
 			// Draw player's current score
