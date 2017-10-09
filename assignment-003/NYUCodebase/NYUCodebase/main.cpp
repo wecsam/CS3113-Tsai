@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
 			// Make a new column at the right.
 			invaders.emplace_back();
 			// Fill it with invaders of this type.
-			float x = column * 0.5f - ORTHO_X_BOUND + 0.25f;
+			register float x = column * 0.5f - ORTHO_X_BOUND + 0.25f;
 			for (size_t row = 0; row < DESIRED_INVADERS.size(); ++row) {
 				invaders.back().emplace_back(
 					spriteSheet,
