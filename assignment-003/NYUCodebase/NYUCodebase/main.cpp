@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 		std::forward_list<Bullet> bullets;
 		// The invaders come in a grid. The outer list represents the columns.
 		bool invadersGoingRight = true;
-		std::list<std::list<Invader>> invaders;
+		std::list<std::vector<Invader>> invaders;
 		for (int column = 0; column < 10; ++column) {
 			// Make a new column at the right.
 			invaders.emplace_back();
