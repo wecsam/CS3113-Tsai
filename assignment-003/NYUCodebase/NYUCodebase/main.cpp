@@ -22,6 +22,7 @@
 #include "Dimensions.h"
 #include "Lives.h"
 #include "Draw.h"
+#include "Input.h"
 #define START_SCREEN_TOP PIXEL_FROM_TOP_TO_ORTHO(100)
 #define START_SCREEN_BOTTOM PIXEL_FROM_BOTTOM_TO_ORTHO(370)
 #define START_SCREEN_LEFT_RIGHT PIXEL_FROM_RIGHT_TO_ORTHO(40)
@@ -58,38 +59,6 @@ GLuint LoadTexture(const char *filePath) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	stbi_image_free(image);
 	return result;
-}
-
-bool ProcessInput(GLuint spriteSheet, PlayerLaserCannon& player, std::forward_list<Bullet>& bullets) {
-	// Scan for input events.
-	SDL_Event event;
-	while (SDL_PollEvent(&event)) {
-		switch (event.type) {
-		case SDL_QUIT:
-		case SDL_WINDOWEVENT_CLOSE:
-			return true;
-		case SDL_KEYDOWN:
-			switch (event.key.keysym.scancode) {
-			case SDL_SCANCODE_SPACE:
-				// The spacebar was pressed.
-				bullets.emplace_front(spriteSheet, true, (player.GetLeftBoxBound() + player.GetRightBoxBound()) / 2.0f, -2.8f);
-				break;
-			}
-			break;
-		}
-	}
-	// Poll for pressed keys.
-	const Uint8* keys = SDL_GetKeyboardState(NULL);
-	if (keys[SDL_SCANCODE_LEFT]) {
-		player.CurrentMovement = PlayerLaserCannon::Movements::LEFT;
-	}
-	else if (keys[SDL_SCANCODE_RIGHT]) {
-		player.CurrentMovement = PlayerLaserCannon::Movements::RIGHT;
-	}
-	else {
-		player.CurrentMovement = PlayerLaserCannon::Movements::STATIONARY;
-	}
-	return false;
 }
 
 Uint32 MillisecondsElapsed() {
@@ -183,10 +152,12 @@ int main(int argc, char *argv[])
 		// Loop for the start screen
 		while (mode == GAME_MODE_START) {
 			Uint32 millisecondsElapsed = MillisecondsElapsed();
-			if (ProcessInput(spriteSheet, player, bullets)) {
+			Input input;
+			if (input.QuitRequested) {
 				mode = GAME_MODE_QUIT;
 				break;
 			}
+			input.Process(spriteSheet, player, bullets);
 			glClear(GL_COLOR_BUFFER_BIT);
 			// Draw start screen
 			DrawTrianglesWithTexture(program, 2, startScreenVertices, startScreenTexCoords, startScreen);
@@ -217,10 +188,12 @@ int main(int argc, char *argv[])
 		// Loop for gameplay
 		while (mode == GAME_MODE_PLAY) {
 			Uint32 millisecondsElapsed = MillisecondsElapsed();
-			if (ProcessInput(spriteSheet, player, bullets)) {
+			Input input;
+			if (input.QuitRequested) {
 				mode = GAME_MODE_QUIT;
 				break;
 			}
+			input.Process(spriteSheet, player, bullets);
 			glClear(GL_COLOR_BUFFER_BIT);
 			// Draw player's current score
 			DrawText(program, charactersT, "Score: " + std::to_string(score), 20.0f, 49.445f, 0.5f);
