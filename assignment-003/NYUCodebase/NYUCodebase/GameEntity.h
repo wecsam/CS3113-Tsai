@@ -94,4 +94,8 @@ public:
 	};
 	Invader(GLuint, InvaderType, float orthoPositionX = 0.0f, float orthoPositionY = 0.0f);
 	void CalculateMotion(Uint32);
+	unsigned int GetPointValue() const;
+private:
+	static const unsigned int points[];
+	InvaderType type;
 };

@@ -187,7 +187,16 @@ void Bullet::MoveOffScreen() {
 	MoveY(2 * ORTHO_Y_BOUND);
 }
 Invader::Invader(GLuint spriteSheet, InvaderType invaderType, float orthoPositionX, float orthoPositionY) :
-	Entity(spriteSheet, 114.0f, 120.0f + invaderType * 64.0f, 84.0f, 64.0f, SPRITE_SCALE, orthoPositionX, orthoPositionY) {}
+	Entity(spriteSheet, 114.0f, 120.0f + invaderType * 64.0f, 84.0f, 64.0f, SPRITE_SCALE, orthoPositionX, orthoPositionY),
+	type(invaderType) {}
 void Invader::CalculateMotion(Uint32 millisecondsElapsed) {
 	// TODO
+}
+const unsigned int Invader::points[] = {
+	30,
+	20,
+	10
+};
+unsigned int Invader::GetPointValue() const {
+	return points[type];
 }

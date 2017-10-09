@@ -216,6 +216,25 @@ int main(int argc, char *argv[])
 			// Draw player
 			player.CalculateMotion(millisecondsElapsed);
 			player.Draw(program);
+			// Check for bullets hitting invaders.
+			invaders.remove_if([](const auto& c) { return c.empty(); });
+			for (auto& c : invaders) {
+				// We only need to check for the invader at the bottom of the list
+				// because a bullet from the player cannot hit any invaders behind
+				// that invader.
+				for (Bullet& b : bullets) {
+					if (
+						b.GetTopBoxBound() > c.back().GetBottomBoxBound() &&
+						b.GetLeftBoxBound() <= c.back().GetRightBoxBound() &&
+						b.GetRightBoxBound() >= c.back().GetLeftBoxBound()
+						) {
+						// This bullet hit this invader.
+						score += c.back().GetPointValue();
+						b.MoveOffScreen();
+						c.pop_back();
+					}
+				}
+			}
 			// Draw invaders
 			for (const auto& c : invaders) {
 				for (const Invader& a : c) {
