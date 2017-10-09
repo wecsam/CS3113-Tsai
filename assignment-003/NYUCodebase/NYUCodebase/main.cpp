@@ -216,9 +216,29 @@ int main(int argc, char *argv[])
 			// Draw player
 			player.CalculateMotion(millisecondsElapsed);
 			player.Draw(program);
-			// Check for bullets hitting invaders.
+			// If there are no more invaders, the game is over.
 			invaders.remove_if([](const auto& c) { return c.empty(); });
+			if (invaders.empty()) {
+				mode = GAME_MODE_START;
+				break;
+			}
+			// If the invaders have hit a side of the screen, reverse their direction.
+			if (invadersGoingRight) {
+				if (invaders.back().front().GetRightBoxBound() > ORTHO_X_BOUND) {
+					invadersGoingRight = false;
+				}
+			}
+			else {
+				if (invaders.front().front().GetLeftBoxBound() < -ORTHO_X_BOUND) {
+					invadersGoingRight = true;
+				}
+			}
+			// Check for bullets hitting invaders and invaders reaching the player.
 			for (auto& c : invaders) {
+				// If an invader makes it past the player, the game is over.
+				if (c.back().GetTopBoxBound() < player.GetBottomBoxBound()) {
+					mode = GAME_MODE_START;
+				}
 				// We only need to check for the invader at the bottom of the list
 				// because a bullet from the player cannot hit any invaders behind
 				// that invader.
@@ -236,9 +256,15 @@ int main(int argc, char *argv[])
 				}
 			}
 			// Draw invaders
-			for (const auto& c : invaders) {
-				for (const Invader& a : c) {
-					a.Draw(program);
+			{
+				register float invaderXDelta = (invadersGoingRight ? 0.0005f : -0.0005f) / invaders.size() * millisecondsElapsed;
+				register float invaderYDelta = -0.000005 * millisecondsElapsed;
+				for (auto& c : invaders) {
+					for (Invader& a : c) {
+						a.MoveX(invaderXDelta);
+						a.MoveY(invaderYDelta);
+						a.Draw(program);
+					}
 				}
 			}
 			// Draw bullets
