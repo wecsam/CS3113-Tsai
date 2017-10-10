@@ -37,6 +37,7 @@ enum GameMode {
 	GAME_MODE_QUIT,
 	GAME_MODE_START,
 	GAME_MODE_PLAY,
+	GAME_MODE_DEAD,
 	NUM_GAME_MODES
 };
 const std::vector<Invader::InvaderType> DESIRED_INVADERS = {
@@ -258,7 +259,7 @@ int main(int argc, char *argv[])
 					b.MoveOffScreen();
 					lives.RemoveLife();
 					if (!lives.NumberLeft()) {
-						mode = GAME_MODE_START;
+						mode = GAME_MODE_DEAD;
 					}
 					// Only allow the player to get hit once per frame.
 					break;
@@ -326,7 +327,7 @@ int main(int argc, char *argv[])
 			for (auto& c : invaders) {
 				// If an invader makes it past the player, the game is over.
 				if (c.back().GetTopBoxBound() < player.GetBottomBoxBound()) {
-					mode = GAME_MODE_START;
+					mode = GAME_MODE_DEAD;
 				}
 				// We only need to check for the invader at the bottom of the list
 				// because a bullet from the player cannot hit any invaders behind
@@ -368,6 +369,26 @@ int main(int argc, char *argv[])
 				b.Draw(program);
 			}
 			SDL_GL_SwapWindow(displayWindow);
+		}
+		// The player died.
+		if (mode == GAME_MODE_DEAD) {
+			glClear(GL_COLOR_BUFFER_BIT);
+			DrawText(program, charactersT, "You died!", 20.0f, 325.0f, 0.5f);
+			DrawText(program, charactersT, "Score: " + std::to_string(score), 20.0f, 375.0f, 0.5f);
+			DrawText(program, charactersT, "Press Esc to return to the main menu.", 20.0f, 415.0f, 0.25f);
+			SDL_GL_SwapWindow(displayWindow);
+			while (true) {
+				MillisecondsElapsed();
+				Input input;
+				if (input.QuitRequested) {
+					mode = GAME_MODE_QUIT;
+					break;
+				}
+				if (input.EscapePressed) {
+					mode = GAME_MODE_START;
+					break;
+				}
+			}
 		}
 	}
 
