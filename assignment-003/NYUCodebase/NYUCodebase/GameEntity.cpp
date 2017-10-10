@@ -18,22 +18,22 @@ void Entity::UVWrap::GetTextureCoordinates(float* texCoords) const {
 	SetBox(texCoords, V, U + Width, V + Height, U);
 }
 float Entity::GetLeftBoxBound() const {
-	return vertices[VertexIndices::T1_TOP_LEFT_X];
+	return GetCenterX() - orthoHalfWidth;
 }
 float Entity::GetRightBoxBound() const {
-	return vertices[VertexIndices::T1_TOP_RIGHT_X];
+	return GetCenterX() + orthoHalfWidth;
 }
 float Entity::GetTopBoxBound() const {
-	return vertices[VertexIndices::T1_TOP_LEFT_Y];
+	return GetCenterY() + orthoHalfHeight;
 }
 float Entity::GetBottomBoxBound() const {
-	return vertices[VertexIndices::T1_BOTTOM_LEFT_Y];
+	return GetCenterY() - orthoHalfHeight;
 }
 float Entity::GetWidth() const {
-	return GetRightBoxBound() - GetLeftBoxBound();
+	return orthoHalfWidth * 2.0f;
 }
 float Entity::GetHeight() const {
-	return GetTopBoxBound() - GetBottomBoxBound();
+	return orthoHalfHeight * 2.0f;
 }
 bool Entity::IsCollidingWith(const Entity& other) const {
 	return !(
@@ -44,11 +44,17 @@ bool Entity::IsCollidingWith(const Entity& other) const {
 		);
 }
 void Entity::Draw(ShaderProgram& program) const {
-	DrawTrianglesWithTexture(program, 2, vertices, texCoords, spriteSheet);
+	DrawTrianglesWithTexture(ModelviewMatrix, program, 2, vertices, texCoords, spriteSheet);
 }
 void Entity::GetCenter(float& x, float& y) const {
-	x = (GetLeftBoxBound() + GetRightBoxBound()) / 2.0f;
-	y = (GetTopBoxBound() + GetBottomBoxBound()) / 2.0f;
+	x = GetCenterX();
+	y = GetCenterY();
+}
+float Entity::GetCenterX() const {
+	return ModelviewMatrix.m[3][0];
+}
+float Entity::GetCenterY() const {
+	return ModelviewMatrix.m[3][1];
 }
 void Entity::SetBoxLeft(float* a, float x) {
 	a[VertexIndices::T1_TOP_LEFT_X] =
@@ -86,13 +92,14 @@ Entity::Entity(GLuint spriteSheet, float spriteSheetX, float spriteSheetY, float
 	MoveX(orthoPositionX);
 	MoveY(orthoPositionY);
 }
+void Entity::Move(float dx, float dy) {
+	ModelviewMatrix.Translate(dx, dy, 0.0f);
+}
 void Entity::MoveX(float dx) {
-	SetBoxLeft(vertices, GetLeftBoxBound() + dx);
-	SetBoxRight(vertices, GetRightBoxBound() + dx);
+	Move(dx, 0.0f);
 }
 void Entity::MoveY(float dy) {
-	SetBoxTop(vertices, GetTopBoxBound() + dy);
-	SetBoxBottom(vertices, GetBottomBoxBound() + dy);
+	Move(0.0f, dy);
 }
 void Entity::SetSpriteSheet(GLuint spriteSheet) {
 	// Store the texture ID.
@@ -108,12 +115,10 @@ void Entity::SetSprite(float x, float y, float width, float height, float scale 
 	);
 	// Recompute the texture coordinates array.
 	UV.GetTextureCoordinates(texCoords);
-	// Recompute the bounding box.
-	float orthoXBound = scale * width / WIDTH * ORTHO_X_BOUND,
-		orthoYBound = scale * height / HEIGHT * ORTHO_Y_BOUND,
-		centerX, centerY;
-	GetCenter(centerX, centerY);
-	SetBox(vertices, centerY + orthoYBound, centerX + orthoXBound, centerY - orthoYBound, centerX - orthoXBound);
+	// Recompute the aspect ratio.
+	orthoHalfWidth = scale * width / WIDTH * ORTHO_X_BOUND;
+	orthoHalfHeight = scale * height / HEIGHT * ORTHO_Y_BOUND;
+	SetBox(vertices, orthoHalfHeight, orthoHalfWidth, -orthoHalfHeight, -orthoHalfWidth);
 }
 PlayerLaserCannon::PlayerLaserCannon(GLuint spriteSheet, float orthoPositionX, float orthoPositionY) :
 	Entity(spriteSheet, 3.0f, 90.0f, 111.0f, 74.0f, SPRITE_SCALE, orthoPositionX, orthoPositionY) {}

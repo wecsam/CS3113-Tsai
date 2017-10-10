@@ -4,7 +4,8 @@
 #define CHARACTERS_SHEET_WIDTH 640.0f // pixels
 #define CHARACTERS_SHEET_HEIGHT 1120.0f // pixels
 
-void DrawTrianglesWithTexture(ShaderProgram& program, GLsizei numTriangles, const float* vertices, const float* texCoords, GLuint textureID) {
+void DrawTrianglesWithTexture(const Matrix& ModelviewMatrix, ShaderProgram& program, GLsizei numTriangles, const float* vertices, const float* texCoords, GLuint textureID) {
+	program.SetModelviewMatrix(ModelviewMatrix);
 	glVertexAttribPointer(program.positionAttribute, 2, GL_FLOAT, false, 0, vertices);
 	glVertexAttribPointer(program.texCoordAttribute, 2, GL_FLOAT, false, 0, texCoords);
 	glEnableVertexAttribArray(program.positionAttribute);
@@ -45,7 +46,7 @@ bool DrawText(ShaderProgram& program, GLuint charactersT, const std::string& tex
 		uv.GetTextureCoordinates(texCoords + i * 12);
 	}
 	// Draw the arrays.
-	DrawTrianglesWithTexture(program, 2 * text.size(), vertices, texCoords, charactersT);
+	DrawTrianglesWithTexture(IDENTITY_MATRIX, program, 2 * text.size(), vertices, texCoords, charactersT);
 	// Free the allocated arrays.
 	free(vertices);
 	free(texCoords);

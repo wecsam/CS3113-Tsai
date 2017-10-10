@@ -14,6 +14,9 @@ public:
 	bool IsCollidingWith(const Entity&) const;
 	void Draw(ShaderProgram&) const;
 	void GetCenter(float&, float&) const;
+	float GetCenterX() const;
+	float GetCenterY() const;
+	void Move(float, float);
 	void MoveX(float);
 	void MoveY(float);
 	virtual void CalculateMotion(Uint32) = 0;
@@ -57,7 +60,10 @@ private:
 	};
 	float vertices[VertexIndices::NUM_VERTICES] = { 0.0f };
 	float texCoords[VertexIndices::NUM_VERTICES];
+	Matrix ModelviewMatrix;
 	GLuint spriteSheet;
+	float orthoHalfWidth;
+	float orthoHalfHeight;
 };
 class PlayerLaserCannon : public Entity {
 public:

@@ -97,12 +97,11 @@ int main(int argc, char *argv[])
 
 	// Viewport setup
 	glViewport(0, 0, WIDTH, HEIGHT);
-	Matrix projectionMatrix, modelviewMatrix;
+	Matrix projectionMatrix;
 	projectionMatrix.SetOrthoProjection(-ORTHO_X_BOUND, ORTHO_X_BOUND, -ORTHO_Y_BOUND, ORTHO_Y_BOUND, -1.0f, 1.0f);
 	ShaderProgram program(RESOURCE_FOLDER"vertex_textured.glsl", RESOURCE_FOLDER"fragment_textured.glsl");
 	glUseProgram(program.programID);
 	program.SetProjectionMatrix(projectionMatrix);
-	program.SetModelviewMatrix(modelviewMatrix);
 
 	// Load textures
 	GLuint spriteSheet = LoadTexture(RESOURCE_FOLDER"Images/sprites.png");
@@ -165,7 +164,7 @@ int main(int argc, char *argv[])
 			input.Process(spriteSheet, player, bullets);
 			glClear(GL_COLOR_BUFFER_BIT);
 			// Draw start screen
-			DrawTrianglesWithTexture(program, 2, startScreenVertices, startScreenTexCoords, startScreen);
+			DrawTrianglesWithTexture(IDENTITY_MATRIX, program, 2, startScreenVertices, startScreenTexCoords, startScreen);
 			// Draw player
 			player.CalculateMotion(millisecondsElapsed);
 			player.Draw(program);
