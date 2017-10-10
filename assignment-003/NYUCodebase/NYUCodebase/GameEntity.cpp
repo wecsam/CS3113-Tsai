@@ -9,7 +9,7 @@
 #define PLAYER_BRAKE 0.01f
 #define STATIONARY_VELOCITY 0.0001f
 float lerp(float v0, float v1, float t) {
-	return (1.0 - t) * v0 + t * v1;
+	return (1.0f - t) * v0 + t * v1;
 }
 Entity::UVWrap::UVWrap() {}
 Entity::UVWrap::UVWrap(float U, float V, float Width, float Height) :
