@@ -160,22 +160,9 @@ int main(int argc, char *argv[])
 		unsigned int bulletsFired = 0, lastRetaliation = 0;
 		Uint32 lastRetaliationTicks = 0;
 		// The invaders come in a grid. The outer list represents the columns.
-		bool invadersGoingRight = false, invadersEntering = true;
+		bool invadersGoingRight, invadersEntering;
+		int level = 0;
 		std::list<std::vector<Invader>> invaders;
-		for (int column = 0; column < 10; ++column) {
-			// Make a new column at the right.
-			invaders.emplace_back();
-			// Fill it with invaders of this type.
-			register float x = ORTHO_X_BOUND + 0.25f + column * 0.5f;
-			for (size_t row = 0; row < DESIRED_INVADERS.size(); ++row) {
-				invaders.back().emplace_back(
-					spriteSheet,
-					DESIRED_INVADERS[row],
-					x,
-					ORTHO_Y_BOUND - PIXEL_TO_ORTHO_Y(CHARACTERS_HEIGHT) - row * 0.5f
-				);
-			}
-		}
 		// In the lower-left corner, one icon will show for each life that is left.
 		Lives lives(
 			spriteSheet,
@@ -281,11 +268,26 @@ int main(int argc, char *argv[])
 			// Draw player
 			player.CalculateMotion(millisecondsElapsed);
 			player.Draw(program);
-			// If there are no more invaders, the game is over.
+			// If there are no more invaders, make a new fleet and animate it in.
 			invaders.remove_if([](const auto& c) { return c.empty(); });
 			if (invaders.empty()) {
-				mode = GAME_MODE_START;
-				break;
+				++level;
+				invadersGoingRight = false;
+				invadersEntering = true;
+				for (int column = 0; column < 10; ++column) {
+					// Make a new column at the right.
+					invaders.emplace_back();
+					// Fill it with invaders of this type.
+					register float x = ORTHO_X_BOUND + 0.25f + column * 0.5f;
+					for (size_t row = 0; row < DESIRED_INVADERS.size(); ++row) {
+						invaders.back().emplace_back(
+							spriteSheet,
+							DESIRED_INVADERS[row],
+							x,
+							ORTHO_Y_BOUND - PIXEL_TO_ORTHO_Y(CHARACTERS_HEIGHT) - row * 0.5f
+						);
+					}
+				}
 			}
 			// If the invaders have hit a side of the screen, reverse their direction.
 			if (invadersGoingRight) {
@@ -336,9 +338,14 @@ int main(int argc, char *argv[])
 						b.GetRightBoxBound() >= c.back().GetLeftBoxBound()
 						) {
 						// This bullet hit this invader.
+						bool below1K = score < 1000;
 						score += c.back().GetPointValue();
 						b.MoveOffScreen();
 						c.pop_back();
+						// When the score reaches 1,000, the player gets an additional life.
+						if (below1K && score >= 1000) {
+							lives.AddLife();
+						}
 						break;
 					}
 				}
@@ -346,7 +353,7 @@ int main(int argc, char *argv[])
 			// Draw invaders
 			{
 				register float invaderXDelta = (invadersEntering ? -0.5f : (invadersGoingRight ? 0.005f : -0.005f)) / invaders.size() / invaders.size() * millisecondsElapsed;
-				register float invaderYDelta = -0.000005f * millisecondsElapsed;
+				register float invaderYDelta = -0.000005f * level * level * millisecondsElapsed;
 				for (auto& c : invaders) {
 					for (Invader& a : c) {
 						a.MoveX(invaderXDelta);
