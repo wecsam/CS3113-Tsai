@@ -339,6 +339,7 @@ int main(int argc, char *argv[])
 						score += c.back().GetPointValue();
 						b.MoveOffScreen();
 						c.pop_back();
+						break;
 					}
 				}
 			}
