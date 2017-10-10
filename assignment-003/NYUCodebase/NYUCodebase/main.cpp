@@ -28,6 +28,7 @@
 #define START_SCREEN_LEFT_RIGHT PIXEL_FROM_RIGHT_TO_ORTHO(40)
 #define START_SCREEN_BUTTON_OUTER (164.0f / 260.25f * START_SCREEN_LEFT_RIGHT)
 #define START_SCREEN_BUTTON_INNER (66.0f / 260.25f * START_SCREEN_LEFT_RIGHT)
+#define START_SCREEN_ANIMATION_MS 500
 #define REMOVE_OFFSCREEN_BULLETS(bullets) bullets.remove_if([](const Bullet& b) { return b.IsOffScreen(); })
 #define RETALIATE_EVERY_BULLETS 2
 #define MAX_RETALIATION_DISTANCE 0.5f
@@ -84,6 +85,38 @@ Uint32 MillisecondsElapsed() {
 }
 
 SDL_Window* displayWindow;
+
+float square(float x) {
+	return x * x;
+}
+void AnimateY(GameMode& mode, ShaderProgram& program, float* vertices, float* texCoords, GLuint textureID, Uint32 animationDurationMilliseconds, float(*position)(float)) {
+	Matrix modelviewMatrix;
+	Uint32 startTicks = SDL_GetTicks(), delta = 0;
+	do {
+		// Position the start screen.
+		modelviewMatrix.Identity();
+		modelviewMatrix.Translate(0.0f, position((float)delta / animationDurationMilliseconds), 0.0f);
+		// Process input.
+		Input input;
+		if (input.QuitRequested) {
+			// Quit the game.
+			mode = GAME_MODE_QUIT;
+			break;
+		}
+		if (input.BulletsToFire || input.EscapePressed) {
+			// Jump to the end of this animation.
+			break;
+		}
+		// Draw the start screen.
+		glClear(GL_COLOR_BUFFER_BIT);
+		DrawTrianglesWithTexture(modelviewMatrix, program, 2, vertices, texCoords, textureID);
+		SDL_GL_SwapWindow(displayWindow);
+		// Pause if this loop is running more quickly than the desired frame rate.
+		MillisecondsElapsed();
+		// Get the time that has passed since the last loop.
+		delta = SDL_GetTicks() - startTicks;
+	} while (delta < animationDurationMilliseconds);
+}
 
 int main(int argc, char *argv[])
 {
@@ -153,6 +186,16 @@ int main(int argc, char *argv[])
 		);
 		// The player's score can be kept track of with an int.
 		unsigned int score = 0;
+		// Slide the start screen in from the top.
+		AnimateY(
+			mode,
+			program,
+			startScreenVertices,
+			startScreenTexCoords,
+			startScreen,
+			START_SCREEN_ANIMATION_MS,
+			[](float progress) { return (ORTHO_Y_BOUND - START_SCREEN_BOTTOM) * square(progress - 1); }
+		);
 		// Loop for the start screen
 		while (mode == GAME_MODE_START) {
 			Uint32 millisecondsElapsed = MillisecondsElapsed();
@@ -189,6 +232,16 @@ int main(int argc, char *argv[])
 			REMOVE_OFFSCREEN_BULLETS(bullets);
 			SDL_GL_SwapWindow(displayWindow);
 		}
+		// Slide the start screen out toward the top.
+		AnimateY(
+			mode,
+			program,
+			startScreenVertices,
+			startScreenTexCoords,
+			startScreen,
+			START_SCREEN_ANIMATION_MS,
+			[](float progress) { return (ORTHO_Y_BOUND - START_SCREEN_BOTTOM) * square(progress); }
+		);
 		// Loop for gameplay
 		while (mode == GAME_MODE_PLAY) {
 			Uint32 millisecondsElapsed = MillisecondsElapsed();
