@@ -160,13 +160,13 @@ int main(int argc, char *argv[])
 		unsigned int bulletsFired = 0, lastRetaliation = 0;
 		Uint32 lastRetaliationTicks = 0;
 		// The invaders come in a grid. The outer list represents the columns.
-		bool invadersGoingRight = true;
+		bool invadersGoingRight = false, invadersEntering = true;
 		std::list<std::vector<Invader>> invaders;
 		for (int column = 0; column < 10; ++column) {
 			// Make a new column at the right.
 			invaders.emplace_back();
 			// Fill it with invaders of this type.
-			register float x = column * 0.5f - ORTHO_X_BOUND + 0.25f;
+			register float x = ORTHO_X_BOUND + 0.25f + column * 0.5f;
 			for (size_t row = 0; row < DESIRED_INVADERS.size(); ++row) {
 				invaders.back().emplace_back(
 					spriteSheet,
@@ -296,6 +296,7 @@ int main(int argc, char *argv[])
 			else {
 				if (invaders.front().front().GetLeftBoxBound() < -ORTHO_X_BOUND) {
 					invadersGoingRight = true;
+					invadersEntering = false;
 				}
 			}
 			// An invader may shoot back at the player.
@@ -343,7 +344,7 @@ int main(int argc, char *argv[])
 			}
 			// Draw invaders
 			{
-				register float invaderXDelta = (invadersGoingRight ? 0.005f : -0.005f) / invaders.size() / invaders.size() * millisecondsElapsed;
+				register float invaderXDelta = (invadersEntering ? -0.5f : (invadersGoingRight ? 0.005f : -0.005f)) / invaders.size() / invaders.size() * millisecondsElapsed;
 				register float invaderYDelta = -0.000005f * millisecondsElapsed;
 				for (auto& c : invaders) {
 					for (Invader& a : c) {
