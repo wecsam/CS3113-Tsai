@@ -75,6 +75,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Animation.cpp" />
     <ClCompile Include="Draw.cpp" />
     <ClCompile Include="GameEntity.cpp" />
     <ClCompile Include="Input.cpp" />
@@ -85,6 +86,7 @@
     <ClCompile Include="ShaderProgram.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Animation.h" />
     <ClInclude Include="Draw.h" />
     <ClInclude Include="GameEntity.h" />
     <ClInclude Include="Dimensions.h" />

@@ -23,6 +23,7 @@
 #include "Lives.h"
 #include "Draw.h"
 #include "Input.h"
+#include "Animation.h"
 #define START_SCREEN_TOP PIXEL_FROM_TOP_TO_ORTHO(100)
 #define START_SCREEN_BOTTOM PIXEL_FROM_BOTTOM_TO_ORTHO(370)
 #define START_SCREEN_LEFT_RIGHT PIXEL_FROM_RIGHT_TO_ORTHO(39.5f)
@@ -135,11 +136,14 @@ int main(int argc, char *argv[])
 	projectionMatrix.SetOrthoProjection(-ORTHO_X_BOUND, ORTHO_X_BOUND, -ORTHO_Y_BOUND, ORTHO_Y_BOUND, -1.0f, 1.0f);
 	program = new ShaderProgram(RESOURCE_FOLDER"vertex_textured.glsl", RESOURCE_FOLDER"fragment_textured.glsl");
 	program->SetProjectionMatrix(projectionMatrix);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	// Load textures
 	spriteSheet = LoadTexture(RESOURCE_FOLDER"Images/sprites.png");
 	GLuint startScreen = LoadTexture(RESOURCE_FOLDER"Images/start.png");
 	fontGrid = LoadTexture(RESOURCE_FOLDER"Images/characters.png");
+	anExplosion = LoadTexture(RESOURCE_FOLDER"Images/explosion.png");
 
 	// Start screen coordinates
 	// 40 pixels from left of screen
@@ -159,6 +163,8 @@ int main(int argc, char *argv[])
 		std::forward_list<Bullet> bullets;
 		unsigned int bulletsFired = 0, lastRetaliation = 0;
 		Uint32 lastRetaliationTicks = 0;
+		// We only need to be able to add and remove animations efficiently.
+		std::forward_list<Animation> animations;
 		// The invaders come in a grid. The outer list represents the columns.
 		bool invadersGoingRight, invadersEntering;
 		int level = 0;
@@ -252,8 +258,13 @@ int main(int argc, char *argv[])
 					b.GetLeftBoxBound() <= player.GetRightBoxBound() &&
 					b.GetRightBoxBound() >= player.GetLeftBoxBound()) {
 					// The player was hit!
+					// Add an explosion animation.
+					animations.push_front(ExplosionAnimation(b.GetCenterX(), b.GetBottomBoxBound()));
+					// Dispose of the bullet.
 					b.MoveOffScreen();
+					// Deduct a life from the player.
 					lives.RemoveLife();
+					// Once the player loses all lives, the game is over.
 					if (!lives.NumberLeft()) {
 						mode = GAME_MODE_DEAD;
 					}
@@ -334,8 +345,12 @@ int main(int argc, char *argv[])
 						b.GetRightBoxBound() >= c.back().GetLeftBoxBound()
 						) {
 						// This bullet hit this invader.
+						// Add an explosion animation.
+						animations.push_front(ExplosionAnimation(b.GetCenterX(), b.GetTopBoxBound()));
+						// Increase the player's score.
 						bool below1K = score < 1000;
 						score += c.back().GetPointValue();
+						// Dispose of the bullet and the invader.
 						b.MoveOffScreen();
 						c.pop_back();
 						// When the score reaches 1,000, the player gets an additional life.
@@ -362,6 +377,9 @@ int main(int argc, char *argv[])
 				b.CalculateMotion(millisecondsElapsed);
 				b.Draw();
 			}
+			// Draw animations
+			animations.remove_if([](Animation& a) { return a.Draw(); });
+			// Send the graphics to the screen.
 			SDL_GL_SwapWindow(displayWindow);
 		}
 		// The player died.
