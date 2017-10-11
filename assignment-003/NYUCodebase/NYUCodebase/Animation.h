@@ -1,4 +1,5 @@
 #pragma once
+#include <forward_list>
 #ifdef _WINDOWS
 #include <GL/glew.h>
 #endif
@@ -25,4 +26,12 @@ private:
 class ExplosionAnimation : public Animation {
 public:
 	ExplosionAnimation(float orthoPositionX, float orthoPositionY);
+};
+class AnimationList {
+public:
+	void Add(const Animation&);
+	void Add(Animation&&);
+	void DrawAll();
+private:
+	std::forward_list<Animation> animations;
 };

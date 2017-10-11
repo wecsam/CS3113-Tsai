@@ -87,6 +87,7 @@ Uint32 MillisecondsElapsed() {
 }
 
 SDL_Window* displayWindow;
+AnimationList animations;
 
 float square(float x) {
 	return x * x;
@@ -112,6 +113,7 @@ void AnimateY(GameMode& mode, float* vertices, float* texCoords, GLuint textureI
 		// Draw the start screen.
 		glClear(GL_COLOR_BUFFER_BIT);
 		DrawTrianglesWithTexture(modelviewMatrix, 2, vertices, texCoords, textureID);
+		animations.DrawAll();
 		SDL_GL_SwapWindow(displayWindow);
 		// Pause if this loop is running more quickly than the desired frame rate.
 		MillisecondsElapsed();
@@ -163,8 +165,6 @@ int main(int argc, char *argv[])
 		std::forward_list<Bullet> bullets;
 		unsigned int bulletsFired = 0, lastRetaliation = 0;
 		Uint32 lastRetaliationTicks = 0;
-		// We only need to be able to add and remove animations efficiently.
-		std::forward_list<Animation> animations;
 		// The invaders come in a grid. The outer list represents the columns.
 		bool invadersGoingRight, invadersEntering;
 		int level = 0;
@@ -209,10 +209,12 @@ int main(int argc, char *argv[])
 				if (b.GetTopBoxBound() > START_SCREEN_BOTTOM) {
 					if (b.GetLeftBoxBound() <= START_SCREEN_BUTTON_OUTER && b.GetRightBoxBound() >= START_SCREEN_BUTTON_INNER) {
 						// The bullet hit the Quit button.
+						animations.Add(ExplosionAnimation(b.GetCenterX(), b.GetTopBoxBound()));
 						mode = GAME_MODE_QUIT;
 					}
 					else if (b.GetLeftBoxBound() <= -START_SCREEN_BUTTON_INNER && b.GetRightBoxBound() >= -START_SCREEN_BUTTON_OUTER) {
 						// The bullet hit the Start button.
+						animations.Add(ExplosionAnimation(b.GetCenterX(), b.GetTopBoxBound()));
 						mode = GAME_MODE_PLAY;
 						b.MoveOffScreen();
 					}
@@ -259,7 +261,7 @@ int main(int argc, char *argv[])
 					b.GetRightBoxBound() >= player.GetLeftBoxBound()) {
 					// The player was hit!
 					// Add an explosion animation.
-					animations.push_front(ExplosionAnimation(b.GetCenterX(), b.GetBottomBoxBound()));
+					animations.Add(ExplosionAnimation(b.GetCenterX(), b.GetBottomBoxBound()));
 					// Dispose of the bullet.
 					b.MoveOffScreen();
 					// Deduct a life from the player.
@@ -346,7 +348,7 @@ int main(int argc, char *argv[])
 						) {
 						// This bullet hit this invader.
 						// Add an explosion animation.
-						animations.push_front(ExplosionAnimation(b.GetCenterX(), b.GetTopBoxBound()));
+						animations.Add(ExplosionAnimation(b.GetCenterX(), b.GetTopBoxBound()));
 						// Increase the player's score.
 						bool below1K = score < 1000;
 						score += c.back().GetPointValue();
@@ -378,7 +380,7 @@ int main(int argc, char *argv[])
 				b.Draw();
 			}
 			// Draw animations
-			animations.remove_if([](Animation& a) { return a.Draw(); });
+			animations.DrawAll();
 			// Send the graphics to the screen.
 			SDL_GL_SwapWindow(displayWindow);
 		}

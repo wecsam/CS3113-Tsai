@@ -33,3 +33,12 @@ bool Animation::Draw() {
 }
 ExplosionAnimation::ExplosionAnimation(float orthoPositionX, float orthoPositionY) :
 	Animation(anExplosion, 97, 124, 16, 86, 60.0f, orthoPositionX, orthoPositionY + PIXEL_TO_ORTHO_Y(50.0f)) {}
+void AnimationList::Add(const Animation& a) {
+	animations.push_front(a);
+}
+void AnimationList::Add(Animation&& a) {
+	animations.push_front(std::move(a));
+}
+void AnimationList::DrawAll() {
+	animations.remove_if([](Animation& a) { return a.Draw(); });
+}
