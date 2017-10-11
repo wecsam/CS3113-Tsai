@@ -32,9 +32,9 @@ Input::Input() {
 	}
 }
 
-void Input::Process(GLuint spriteSheet, PlayerLaserCannon & player, std::forward_list<Bullet>& bullets) {
+void Input::Process(PlayerLaserCannon & player, std::forward_list<Bullet>& bullets) {
 	player.CurrentMovement = PlayerMovement;
 	while (BulletsToFire-- > 0) {
-		bullets.emplace_front(spriteSheet, true, (player.GetLeftBoxBound() + player.GetRightBoxBound()) / 2.0f, -2.8f);
+		bullets.emplace_front(true, (player.GetLeftBoxBound() + player.GetRightBoxBound()) / 2.0f, -2.8f);
 	}
 }

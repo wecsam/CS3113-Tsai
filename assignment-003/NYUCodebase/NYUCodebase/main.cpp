@@ -137,9 +137,9 @@ int main(int argc, char *argv[])
 	program->SetProjectionMatrix(projectionMatrix);
 
 	// Load textures
-	GLuint spriteSheet = LoadTexture(RESOURCE_FOLDER"Images/sprites.png");
+	spriteSheet = LoadTexture(RESOURCE_FOLDER"Images/sprites.png");
 	GLuint startScreen = LoadTexture(RESOURCE_FOLDER"Images/start.png");
-	GLuint charactersT = LoadTexture(RESOURCE_FOLDER"Images/characters.png");
+	fontGrid = LoadTexture(RESOURCE_FOLDER"Images/characters.png");
 
 	// Start screen coordinates
 	// 40 pixels from left of screen
@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
 	GameMode mode = GAME_MODE_START;
 	while (mode != GAME_MODE_QUIT && mode < NUM_GAME_MODES) {
 		// The player controls this cannon. Bullets shoot from this cannon.
-		PlayerLaserCannon player(spriteSheet, 0.0f, -3.2f);
+		PlayerLaserCannon player(0.0f, -3.2f);
 		// We only need to be able to add and remove bullets efficiently.
 		std::forward_list<Bullet> bullets;
 		unsigned int bulletsFired = 0, lastRetaliation = 0;
@@ -165,7 +165,6 @@ int main(int argc, char *argv[])
 		std::list<std::vector<Invader>> invaders;
 		// In the lower-left corner, one icon will show for each life that is left.
 		Lives lives(
-			spriteSheet,
 			player.GetWidth(),
 			4,
 			PIXEL_FROM_LEFT_TO_ORTHO((20.0f + CHARACTERS_WIDTH * 4.0f)),
@@ -190,7 +189,7 @@ int main(int argc, char *argv[])
 				mode = GAME_MODE_QUIT;
 				break;
 			}
-			input.Process(spriteSheet, player, bullets);
+			input.Process(player, bullets);
 			glClear(GL_COLOR_BUFFER_BIT);
 			// Draw start screen
 			DrawTrianglesWithTexture(IDENTITY_MATRIX, 2, startScreenVertices, startScreenTexCoords, startScreen);
@@ -240,12 +239,12 @@ int main(int argc, char *argv[])
 				mode = GAME_MODE_START;
 				break;
 			}
-			input.Process(spriteSheet, player, bullets);
+			input.Process(player, bullets);
 			glClear(GL_COLOR_BUFFER_BIT);
 			// Draw player's current score
-			DrawText(charactersT, "Score: " + std::to_string(score), 20.0f, 49.445f, 0.5f);
+			DrawText("Score: " + std::to_string(score), 20.0f, 49.445f, 0.5f);
 			// Draw player's number of lives
-			DrawText(charactersT, "Lives:", 20.0f, HEIGHT - 20.555f, 0.5f);
+			DrawText("Lives:", 20.0f, HEIGHT - 20.555f, 0.5f);
 			lives.Draw();
 			// Check for bullets hitting the player.
 			for (Bullet& b : bullets) {
@@ -279,7 +278,6 @@ int main(int argc, char *argv[])
 					register float x = ORTHO_X_BOUND + 0.25f + column * 0.5f;
 					for (size_t row = 0; row < DESIRED_INVADERS.size(); ++row) {
 						invaders.back().emplace_back(
-							spriteSheet,
 							DESIRED_INVADERS[row],
 							x,
 							ORTHO_Y_BOUND - PIXEL_TO_ORTHO_Y(CHARACTERS_HEIGHT) - row * 0.5f
@@ -315,7 +313,7 @@ int main(int argc, char *argv[])
 				}
 				// Only retaliate if the player is within range.
 				if (minDistance <= MAX_RETALIATION_DISTANCE) {
-					bullets.emplace_front(spriteSheet, false, (closestInvader->GetLeftBoxBound() + closestInvader->GetRightBoxBound()) / 2.0f, closestInvader->GetBottomBoxBound() - 0.2f);
+					bullets.emplace_front(false, (closestInvader->GetLeftBoxBound() + closestInvader->GetRightBoxBound()) / 2.0f, closestInvader->GetBottomBoxBound() - 0.2f);
 					lastRetaliation += RETALIATE_EVERY_BULLETS;
 					lastRetaliationTicks = SDL_GetTicks();
 				}
@@ -370,9 +368,9 @@ int main(int argc, char *argv[])
 		// The player died.
 		if (mode == GAME_MODE_DEAD) {
 			glClear(GL_COLOR_BUFFER_BIT);
-			DrawText(charactersT, "You died!", 20.0f, 325.0f, 0.5f);
-			DrawText(charactersT, "Score: " + std::to_string(score), 20.0f, 375.0f, 0.5f);
-			DrawText(charactersT, "Press Esc to return to the main menu.", 20.0f, 415.0f, 0.25f);
+			DrawText("You died!", 20.0f, 325.0f, 0.5f);
+			DrawText("Score: " + std::to_string(score), 20.0f, 375.0f, 0.5f);
+			DrawText("Press Esc to return to the main menu.", 20.0f, 415.0f, 0.25f);
 			SDL_GL_SwapWindow(displayWindow);
 			while (true) {
 				MillisecondsElapsed();

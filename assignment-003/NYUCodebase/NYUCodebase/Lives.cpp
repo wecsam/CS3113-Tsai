@@ -1,6 +1,6 @@
 #include "Lives.h"
-Lives::Lives(GLuint spriteSheet, float plcWidth, size_t numberOfLives, float positionX, float positionY) :
-	x(positionX), y(positionY), plcWidth(plcWidth), spriteSheet(spriteSheet) {
+Lives::Lives(float plcWidth, size_t numberOfLives, float positionX, float positionY) :
+	x(positionX), y(positionY), plcWidth(plcWidth) {
 	icons.reserve(numberOfLives);
 	for (size_t i = 0; i < numberOfLives; ++i) {
 		AddLife();
@@ -8,7 +8,6 @@ Lives::Lives(GLuint spriteSheet, float plcWidth, size_t numberOfLives, float pos
 }
 void Lives::AddLife() {
 	icons.emplace_back(
-		spriteSheet,
 		x + icons.size() * plcWidth,
 		y
 	);

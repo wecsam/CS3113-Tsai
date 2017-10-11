@@ -8,6 +8,7 @@
 #define PLAYER_ACCEL 0.0000125f
 #define PLAYER_BRAKE 0.01f
 #define STATIONARY_VELOCITY 0.0001f
+GLuint spriteSheet;
 float lerp(float v0, float v1, float t) {
 	return (1.0f - t) * v0 + t * v1;
 }
@@ -86,8 +87,7 @@ void Entity::SetBox(float* a, float top, float right, float bottom, float left) 
 	SetBoxRight(a, right);
 	SetBoxBottom(a, bottom);
 }
-Entity::Entity(GLuint spriteSheet, float spriteSheetX, float spriteSheetY, float spriteWidthPx, float spriteHeightPx, float scale, float orthoPositionX, float orthoPositionY) {
-	SetSpriteSheet(spriteSheet);
+Entity::Entity(float spriteSheetX, float spriteSheetY, float spriteWidthPx, float spriteHeightPx, float scale, float orthoPositionX, float orthoPositionY) {
 	SetSprite(spriteSheetX, spriteSheetY, spriteWidthPx, spriteHeightPx, scale);
 	MoveX(orthoPositionX);
 	MoveY(orthoPositionY);
@@ -100,10 +100,6 @@ void Entity::MoveX(float dx) {
 }
 void Entity::MoveY(float dy) {
 	Move(0.0f, dy);
-}
-void Entity::SetSpriteSheet(GLuint spriteSheet) {
-	// Store the texture ID.
-	this->spriteSheet = spriteSheet;
 }
 void Entity::SetSprite(float x, float y, float width, float height, float scale = 1.0f) {
 	// Store the new UV mapping.
@@ -120,8 +116,8 @@ void Entity::SetSprite(float x, float y, float width, float height, float scale 
 	orthoHalfHeight = scale * height / HEIGHT * ORTHO_Y_BOUND;
 	SetBox(vertices, orthoHalfHeight, orthoHalfWidth, -orthoHalfHeight, -orthoHalfWidth);
 }
-PlayerLaserCannon::PlayerLaserCannon(GLuint spriteSheet, float orthoPositionX, float orthoPositionY) :
-	Entity(spriteSheet, 3.0f, 90.0f, 111.0f, 74.0f, SPRITE_SCALE, orthoPositionX, orthoPositionY) {}
+PlayerLaserCannon::PlayerLaserCannon(float orthoPositionX, float orthoPositionY) :
+	Entity(3.0f, 90.0f, 111.0f, 74.0f, SPRITE_SCALE, orthoPositionX, orthoPositionY) {}
 void PlayerLaserCannon::CalculateMotion(Uint32 millisecondsElapsed) {
 	// Change the velocity based on the current movement type.
 	switch (CurrentMovement) {
@@ -175,8 +171,8 @@ void PlayerLaserCannon::ShowThrustRight() {
 		CurrentThrust = RIGHT;
 	}
 }
-Bullet::Bullet(GLuint spriteSheet, bool fromPlayer, float orthoPositionX, float orthoPositionY) :
-	Entity(spriteSheet, 177.0f, 25.0f, 12.0f, 64.0f, SPRITE_SCALE, orthoPositionX, orthoPositionY) {
+Bullet::Bullet(bool fromPlayer, float orthoPositionX, float orthoPositionY) :
+	Entity(177.0f, 25.0f, 12.0f, 64.0f, SPRITE_SCALE, orthoPositionX, orthoPositionY) {
 	velocity = fromPlayer ? 0.012f : -0.01f;
 }
 bool Bullet::IsOffScreen() const {
@@ -191,8 +187,8 @@ void Bullet::CalculateMotion(Uint32 millisecondsElapsed) {
 void Bullet::MoveOffScreen() {
 	MoveY(2 * ORTHO_Y_BOUND);
 }
-Invader::Invader(GLuint spriteSheet, InvaderType invaderType, float orthoPositionX, float orthoPositionY) :
-	Entity(spriteSheet, 114.0f, 120.0f + invaderType * 64.0f, 84.0f, 64.0f, SPRITE_SCALE, orthoPositionX, orthoPositionY),
+Invader::Invader(InvaderType invaderType, float orthoPositionX, float orthoPositionY) :
+	Entity(114.0f, 120.0f + invaderType * 64.0f, 84.0f, 64.0f, SPRITE_SCALE, orthoPositionX, orthoPositionY),
 	type(invaderType) {}
 void Invader::CalculateMotion(Uint32 millisecondsElapsed) {
 	// TODO

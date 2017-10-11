@@ -4,7 +4,7 @@
 struct Input
 {
 	Input();
-	void Process(GLuint spriteSheet, PlayerLaserCannon& player, std::forward_list<Bullet>& bullets);
+	void Process(PlayerLaserCannon& player, std::forward_list<Bullet>& bullets);
 	bool QuitRequested = false;
 	bool EscapePressed = false;
 	unsigned int BulletsToFire = 0;

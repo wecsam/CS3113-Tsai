@@ -3,7 +3,7 @@
 #include "GameEntity.h"
 class Lives {
 public:
-	Lives(GLuint spriteSheet, float plcWidth, size_t numberOfLives, float positionX, float positionY);
+	Lives(float plcWidth, size_t numberOfLives, float positionX, float positionY);
 	void AddLife();
 	void RemoveLife();
 	void Draw() const;
@@ -13,5 +13,4 @@ private:
 	const float x;
 	const float y;
 	const float plcWidth;
-	const GLuint spriteSheet;
 };

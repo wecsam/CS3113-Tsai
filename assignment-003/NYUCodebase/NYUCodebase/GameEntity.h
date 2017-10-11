@@ -3,6 +3,7 @@
 #include "ShaderProgram.h"
 #define SPRITE_SHEET_WIDTH 200.0f // pixels
 #define SPRITE_SHEET_HEIGHT 314.0f // pixels
+extern GLuint spriteSheet;
 class Entity {
 public:
 	float GetLeftBoxBound() const;
@@ -32,9 +33,7 @@ public:
 		void GetTextureCoordinates(float*) const;
 	};
 protected:
-	Entity(GLuint spriteSheet, float spriteSheetX, float spriteSheetY, float spriteWidthPx, float spriteHeightPx, float scale = 1.0f, float orthoPositionX = 0.0f, float orthoPositionY = 0.0f);
-	// To determine which sprite appears on screen, the texture must be mapped onto this rectangle.
-	void SetSpriteSheet(GLuint);
+	Entity(float spriteSheetX, float spriteSheetY, float spriteWidthPx, float spriteHeightPx, float scale = 1.0f, float orthoPositionX = 0.0f, float orthoPositionY = 0.0f);
 	// To change the sprite, use SetSprite and give it the coordinates of the image.
 	void SetSprite(float, float, float, float, float);
 	UVWrap UV;
@@ -61,13 +60,12 @@ private:
 	float vertices[VertexIndices::NUM_VERTICES] = { 0.0f };
 	float texCoords[VertexIndices::NUM_VERTICES];
 	Matrix ModelviewMatrix;
-	GLuint spriteSheet;
 	float orthoHalfWidth;
 	float orthoHalfHeight;
 };
 class PlayerLaserCannon : public Entity {
 public:
-	PlayerLaserCannon(GLuint spriteSheet, float orthoPositionX = 0.0f, float orthoPositionY = 0.0f);
+	PlayerLaserCannon(float orthoPositionX = 0.0f, float orthoPositionY = 0.0f);
 	void CalculateMotion(Uint32);
 	void ShowNoThrust();
 	void ShowThrustLeft();
@@ -84,7 +82,7 @@ private:
 };
 class Bullet : public Entity {
 public:
-	Bullet(GLuint spriteSheet, bool fromPlayer, float orthoPositionX = 0.0f, float orthoPositionY = 0.0f);
+	Bullet(bool fromPlayer, float orthoPositionX = 0.0f, float orthoPositionY = 0.0f);
 	bool IsOffScreen() const;
 	void CalculateMotion(Uint32);
 	void MoveOffScreen();
@@ -98,7 +96,7 @@ public:
 		MIDDLE,
 		FRONT
 	};
-	Invader(GLuint, InvaderType, float orthoPositionX = 0.0f, float orthoPositionY = 0.0f);
+	Invader(InvaderType, float orthoPositionX = 0.0f, float orthoPositionY = 0.0f);
 	void CalculateMotion(Uint32);
 	unsigned int GetPointValue() const;
 private:
