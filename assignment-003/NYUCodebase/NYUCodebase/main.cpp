@@ -147,8 +147,8 @@ int main(int argc, char *argv[])
 	// 40 pixels from right of screen
 	// 370 pixels from bottom of screen
 	float startScreenVertices[12], startScreenTexCoords[12];
-	Entity::SetBox(startScreenVertices, START_SCREEN_TOP, START_SCREEN_LEFT_RIGHT, START_SCREEN_BOTTOM, -START_SCREEN_LEFT_RIGHT);
-	Entity::SetBox(startScreenTexCoords, 0.0f, 1.0f, 1.0f, 0.0f);
+	Rectangle::SetBox(startScreenVertices, START_SCREEN_TOP, START_SCREEN_LEFT_RIGHT, START_SCREEN_BOTTOM, -START_SCREEN_LEFT_RIGHT);
+	Rectangle::SetBox(startScreenTexCoords, 0.0f, 1.0f, 1.0f, 0.0f);
 
 	// Main game loops
 	GameMode mode = GAME_MODE_START;
@@ -352,8 +352,7 @@ int main(int argc, char *argv[])
 				register float invaderYDelta = -0.000005f * level * level * millisecondsElapsed;
 				for (auto& c : invaders) {
 					for (Invader& a : c) {
-						a.MoveX(invaderXDelta);
-						a.MoveY(invaderYDelta);
+						a.Move(invaderXDelta, invaderYDelta);
 						a.Draw();
 					}
 				}

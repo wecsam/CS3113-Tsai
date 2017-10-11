@@ -1,6 +1,6 @@
 #include "Draw.h"
-#include "GameEntity.h"
 #include "Dimensions.h"
+#include "Rectangle.h"
 #define CHARACTERS_SHEET_WIDTH 640.0f // pixels
 #define CHARACTERS_SHEET_HEIGHT 1120.0f // pixels
 ShaderProgram* program;
@@ -31,7 +31,7 @@ bool DrawText(const std::string& text, float baselineStartPixelX, float baseline
 	for (size_t i = 0; i < text.size(); ++i) {
 		// Set the vertices.
 		float left = PIXEL_FROM_LEFT_TO_ORTHO((baselineStartPixelX + CHARACTERS_WIDTH * i * scale));
-		Entity::SetBox(vertices + i * 12, top, left + PIXEL_TO_ORTHO_X((CHARACTERS_WIDTH * scale)), top - PIXEL_TO_ORTHO_Y((CHARACTERS_HEIGHT * scale)), left);
+		Rectangle::SetBox(vertices + i * 12, top, left + PIXEL_TO_ORTHO_X((CHARACTERS_WIDTH * scale)), top - PIXEL_TO_ORTHO_Y((CHARACTERS_HEIGHT * scale)), left);
 		// Make sure that the character is in range.
 		char c = text[i];
 		if (c < 0x20 || c > 0xff) {
@@ -39,13 +39,13 @@ bool DrawText(const std::string& text, float baselineStartPixelX, float baseline
 		}
 		// Set the texture coordinates.
 		div_t gridPosition = div(c, 16);
-		Entity::UVWrap uv(
-			CHARACTERS_WIDTH / CHARACTERS_SHEET_WIDTH * gridPosition.rem,
+		Rectangle::SetBox(
+			texCoords + i * 12,
 			CHARACTERS_HEIGHT / CHARACTERS_SHEET_HEIGHT * (gridPosition.quot - 2),
-			CHARACTERS_WIDTH / CHARACTERS_SHEET_WIDTH,
-			CHARACTERS_HEIGHT / CHARACTERS_SHEET_HEIGHT
+			CHARACTERS_WIDTH / CHARACTERS_SHEET_WIDTH * (gridPosition.rem + 1),
+			CHARACTERS_HEIGHT / CHARACTERS_SHEET_HEIGHT * (gridPosition.quot - 1),
+			CHARACTERS_WIDTH / CHARACTERS_SHEET_WIDTH * gridPosition.rem
 		);
-		uv.GetTextureCoordinates(texCoords + i * 12);
 	}
 	// Draw the arrays.
 	DrawTrianglesWithTexture(IDENTITY_MATRIX, 2 * text.size(), vertices, texCoords, fontGrid);

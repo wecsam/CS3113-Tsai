@@ -81,6 +81,7 @@
     <ClCompile Include="Lives.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Matrix.cpp" />
+    <ClCompile Include="Rectangle.cpp" />
     <ClCompile Include="ShaderProgram.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -90,6 +91,7 @@
     <ClInclude Include="Input.h" />
     <ClInclude Include="Lives.h" />
     <ClInclude Include="Matrix.h" />
+    <ClInclude Include="Rectangle.h" />
     <ClInclude Include="ShaderProgram.h" />
   </ItemGroup>
   <ItemGroup>
