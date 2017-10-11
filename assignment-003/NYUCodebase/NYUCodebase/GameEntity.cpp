@@ -43,8 +43,8 @@ bool Entity::IsCollidingWith(const Entity& other) const {
 		GetRightBoxBound() < other.GetLeftBoxBound()
 		);
 }
-void Entity::Draw(ShaderProgram& program) const {
-	DrawTrianglesWithTexture(ModelviewMatrix, program, 2, vertices, texCoords, spriteSheet);
+void Entity::Draw() const {
+	DrawTrianglesWithTexture(ModelviewMatrix, 2, vertices, texCoords, spriteSheet);
 }
 void Entity::GetCenter(float& x, float& y) const {
 	x = GetCenterX();

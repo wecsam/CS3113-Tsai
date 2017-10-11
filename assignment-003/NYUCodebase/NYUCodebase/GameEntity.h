@@ -12,7 +12,7 @@ public:
 	float GetWidth() const;
 	float GetHeight() const;
 	bool IsCollidingWith(const Entity&) const;
-	void Draw(ShaderProgram&) const;
+	void Draw() const;
 	void GetCenter(float&, float&) const;
 	float GetCenterX() const;
 	float GetCenterY() const;

@@ -3,20 +3,21 @@
 #include "Dimensions.h"
 #define CHARACTERS_SHEET_WIDTH 640.0f // pixels
 #define CHARACTERS_SHEET_HEIGHT 1120.0f // pixels
+ShaderProgram* program;
 
-void DrawTrianglesWithTexture(const Matrix& ModelviewMatrix, ShaderProgram& program, GLsizei numTriangles, const float* vertices, const float* texCoords, GLuint textureID) {
-	program.SetModelviewMatrix(ModelviewMatrix);
-	glVertexAttribPointer(program.positionAttribute, 2, GL_FLOAT, false, 0, vertices);
-	glVertexAttribPointer(program.texCoordAttribute, 2, GL_FLOAT, false, 0, texCoords);
-	glEnableVertexAttribArray(program.positionAttribute);
-	glEnableVertexAttribArray(program.texCoordAttribute);
+void DrawTrianglesWithTexture(const Matrix& ModelviewMatrix, GLsizei numTriangles, const float* vertices, const float* texCoords, GLuint textureID) {
+	program->SetModelviewMatrix(ModelviewMatrix);
+	glVertexAttribPointer(program->positionAttribute, 2, GL_FLOAT, false, 0, vertices);
+	glVertexAttribPointer(program->texCoordAttribute, 2, GL_FLOAT, false, 0, texCoords);
+	glEnableVertexAttribArray(program->positionAttribute);
+	glEnableVertexAttribArray(program->texCoordAttribute);
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	glDrawArrays(GL_TRIANGLES, 0, 3 * numTriangles);
-	glDisableVertexAttribArray(program.positionAttribute);
-	glDisableVertexAttribArray(program.texCoordAttribute);
+	glDisableVertexAttribArray(program->positionAttribute);
+	glDisableVertexAttribArray(program->texCoordAttribute);
 }
 
-bool DrawText(ShaderProgram& program, GLuint charactersT, const std::string& text, float baselineStartPixelX, float baselineStartPixelY, float scale) {
+bool DrawText(GLuint charactersT, const std::string& text, float baselineStartPixelX, float baselineStartPixelY, float scale) {
 	// Dynamically allocate arrays of floats in memory for the vertices and texture coordinates.
 	size_t s = 12 * sizeof(float) * text.size();
 	float* vertices = (float*)malloc(s);
@@ -46,7 +47,7 @@ bool DrawText(ShaderProgram& program, GLuint charactersT, const std::string& tex
 		uv.GetTextureCoordinates(texCoords + i * 12);
 	}
 	// Draw the arrays.
-	DrawTrianglesWithTexture(IDENTITY_MATRIX, program, 2 * text.size(), vertices, texCoords, charactersT);
+	DrawTrianglesWithTexture(IDENTITY_MATRIX, 2 * text.size(), vertices, texCoords, charactersT);
 	// Free the allocated arrays.
 	free(vertices);
 	free(texCoords);

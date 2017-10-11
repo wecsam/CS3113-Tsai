@@ -90,7 +90,7 @@ SDL_Window* displayWindow;
 float square(float x) {
 	return x * x;
 }
-void AnimateY(GameMode& mode, ShaderProgram& program, float* vertices, float* texCoords, GLuint textureID, Uint32 animationDurationMilliseconds, float(*position)(float)) {
+void AnimateY(GameMode& mode, float* vertices, float* texCoords, GLuint textureID, Uint32 animationDurationMilliseconds, float(*position)(float)) {
 	Matrix modelviewMatrix;
 	Uint32 startTicks = SDL_GetTicks(), delta = 0;
 	do {
@@ -110,7 +110,7 @@ void AnimateY(GameMode& mode, ShaderProgram& program, float* vertices, float* te
 		}
 		// Draw the start screen.
 		glClear(GL_COLOR_BUFFER_BIT);
-		DrawTrianglesWithTexture(modelviewMatrix, program, 2, vertices, texCoords, textureID);
+		DrawTrianglesWithTexture(modelviewMatrix, 2, vertices, texCoords, textureID);
 		SDL_GL_SwapWindow(displayWindow);
 		// Pause if this loop is running more quickly than the desired frame rate.
 		MillisecondsElapsed();
@@ -133,9 +133,8 @@ int main(int argc, char *argv[])
 	glViewport(0, 0, WIDTH, HEIGHT);
 	Matrix projectionMatrix;
 	projectionMatrix.SetOrthoProjection(-ORTHO_X_BOUND, ORTHO_X_BOUND, -ORTHO_Y_BOUND, ORTHO_Y_BOUND, -1.0f, 1.0f);
-	ShaderProgram program(RESOURCE_FOLDER"vertex_textured.glsl", RESOURCE_FOLDER"fragment_textured.glsl");
-	glUseProgram(program.programID);
-	program.SetProjectionMatrix(projectionMatrix);
+	program = new ShaderProgram(RESOURCE_FOLDER"vertex_textured.glsl", RESOURCE_FOLDER"fragment_textured.glsl");
+	program->SetProjectionMatrix(projectionMatrix);
 
 	// Load textures
 	GLuint spriteSheet = LoadTexture(RESOURCE_FOLDER"Images/sprites.png");
@@ -177,7 +176,6 @@ int main(int argc, char *argv[])
 		// Slide the start screen in from the top.
 		AnimateY(
 			mode,
-			program,
 			startScreenVertices,
 			startScreenTexCoords,
 			startScreen,
@@ -195,10 +193,10 @@ int main(int argc, char *argv[])
 			input.Process(spriteSheet, player, bullets);
 			glClear(GL_COLOR_BUFFER_BIT);
 			// Draw start screen
-			DrawTrianglesWithTexture(IDENTITY_MATRIX, program, 2, startScreenVertices, startScreenTexCoords, startScreen);
+			DrawTrianglesWithTexture(IDENTITY_MATRIX, 2, startScreenVertices, startScreenTexCoords, startScreen);
 			// Draw player
 			player.CalculateMotion(millisecondsElapsed);
-			player.Draw(program);
+			player.Draw();
 			// Draw bullets
 			for (Bullet& b : bullets) {
 				b.CalculateMotion(millisecondsElapsed);
@@ -215,7 +213,7 @@ int main(int argc, char *argv[])
 					}
 				}
 				// Draw the bullet.
-				b.Draw(program);
+				b.Draw();
 			}
 			REMOVE_OFFSCREEN_BULLETS(bullets);
 			SDL_GL_SwapWindow(displayWindow);
@@ -223,7 +221,6 @@ int main(int argc, char *argv[])
 		// Slide the start screen out toward the top.
 		AnimateY(
 			mode,
-			program,
 			startScreenVertices,
 			startScreenTexCoords,
 			startScreen,
@@ -246,10 +243,10 @@ int main(int argc, char *argv[])
 			input.Process(spriteSheet, player, bullets);
 			glClear(GL_COLOR_BUFFER_BIT);
 			// Draw player's current score
-			DrawText(program, charactersT, "Score: " + std::to_string(score), 20.0f, 49.445f, 0.5f);
+			DrawText(charactersT, "Score: " + std::to_string(score), 20.0f, 49.445f, 0.5f);
 			// Draw player's number of lives
-			DrawText(program, charactersT, "Lives:", 20.0f, HEIGHT - 20.555f, 0.5f);
-			lives.Draw(program);
+			DrawText(charactersT, "Lives:", 20.0f, HEIGHT - 20.555f, 0.5f);
+			lives.Draw();
 			// Check for bullets hitting the player.
 			for (Bullet& b : bullets) {
 				if (b.GetBottomBoxBound() < player.GetTopBoxBound() &&
@@ -268,7 +265,7 @@ int main(int argc, char *argv[])
 			REMOVE_OFFSCREEN_BULLETS(bullets);
 			// Draw player
 			player.CalculateMotion(millisecondsElapsed);
-			player.Draw(program);
+			player.Draw();
 			// If there are no more invaders, make a new fleet and animate it in.
 			invaders.remove_if([](const auto& c) { return c.empty(); });
 			if (invaders.empty()) {
@@ -359,23 +356,23 @@ int main(int argc, char *argv[])
 					for (Invader& a : c) {
 						a.MoveX(invaderXDelta);
 						a.MoveY(invaderYDelta);
-						a.Draw(program);
+						a.Draw();
 					}
 				}
 			}
 			// Draw bullets
 			for (Bullet& b : bullets) {
 				b.CalculateMotion(millisecondsElapsed);
-				b.Draw(program);
+				b.Draw();
 			}
 			SDL_GL_SwapWindow(displayWindow);
 		}
 		// The player died.
 		if (mode == GAME_MODE_DEAD) {
 			glClear(GL_COLOR_BUFFER_BIT);
-			DrawText(program, charactersT, "You died!", 20.0f, 325.0f, 0.5f);
-			DrawText(program, charactersT, "Score: " + std::to_string(score), 20.0f, 375.0f, 0.5f);
-			DrawText(program, charactersT, "Press Esc to return to the main menu.", 20.0f, 415.0f, 0.25f);
+			DrawText(charactersT, "You died!", 20.0f, 325.0f, 0.5f);
+			DrawText(charactersT, "Score: " + std::to_string(score), 20.0f, 375.0f, 0.5f);
+			DrawText(charactersT, "Press Esc to return to the main menu.", 20.0f, 415.0f, 0.25f);
 			SDL_GL_SwapWindow(displayWindow);
 			while (true) {
 				MillisecondsElapsed();
@@ -392,6 +389,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	delete program;
 	SDL_Quit();
 	return 0;
 }

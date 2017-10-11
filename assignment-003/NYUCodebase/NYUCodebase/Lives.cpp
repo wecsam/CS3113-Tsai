@@ -16,9 +16,9 @@ void Lives::AddLife() {
 void Lives::RemoveLife() {
 	icons.pop_back();
 }
-void Lives::Draw(ShaderProgram& program) const {
+void Lives::Draw() const {
 	for (const PlayerLaserCannon& p : icons) {
-		p.Draw(program);
+		p.Draw();
 	}
 }
 size_t Lives::NumberLeft() const {
