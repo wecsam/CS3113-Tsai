@@ -314,7 +314,7 @@ int main(int argc, char *argv[])
 			if (bulletsFired - lastRetaliation > RETALIATE_EVERY_BULLETS && SDL_GetTicks() - lastRetaliationTicks > MIN_RETALIATION_WAIT) {
 				// Find the column whose invaders has the closest X position to the player.
 				register float minDistance = FLT_MAX;
-				const Invader* closestInvader;
+				const Invader* closestInvader = NULL;
 				for (const auto& c : invaders) {
 					if (!c.empty()) {
 						register float curDistance = fabs((c.back().GetLeftBoxBound() + c.back().GetRightBoxBound()) / 2.0f - (player.GetLeftBoxBound() + player.GetRightBoxBound()) / 2.0f);
