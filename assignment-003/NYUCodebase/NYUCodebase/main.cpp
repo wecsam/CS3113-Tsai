@@ -124,6 +124,7 @@ void AnimateY(GameMode& mode, float* vertices, float* texCoords, GLuint textureI
 
 int main(int argc, char *argv[])
 {
+	bool immortal = (argc == 2 && strcmp(argv[1], "immortal") == 0);
 	SDL_Init(SDL_INIT_VIDEO);
 	displayWindow = SDL_CreateWindow("Space Invaders", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_OPENGL);
 	SDL_GLContext context = SDL_GL_CreateContext(displayWindow);
@@ -251,27 +252,29 @@ int main(int argc, char *argv[])
 			glClear(GL_COLOR_BUFFER_BIT);
 			// Draw player's current score
 			DrawText("Score: " + std::to_string(score), 20.0f, 49.445f, 0.5f);
-			// Draw player's number of lives
-			DrawText("Lives:", 20.0f, HEIGHT - 20.555f, 0.5f);
-			lives.Draw();
-			// Check for bullets hitting the player.
-			for (Bullet& b : bullets) {
-				if (b.GetBottomBoxBound() < player.GetTopBoxBound() &&
-					b.GetLeftBoxBound() <= player.GetRightBoxBound() &&
-					b.GetRightBoxBound() >= player.GetLeftBoxBound()) {
-					// The player was hit!
-					// Add an explosion animation.
-					animations.Add(ExplosionAnimation(b.GetCenterX(), b.GetBottomBoxBound()));
-					// Dispose of the bullet.
-					b.MoveOffScreen();
-					// Deduct a life from the player.
-					lives.RemoveLife();
-					// Once the player loses all lives, the game is over.
-					if (!lives.NumberLeft()) {
-						mode = GAME_MODE_DEAD;
+			if (!immortal) {
+				// Draw player's number of lives
+				DrawText("Lives:", 20.0f, HEIGHT - 20.555f, 0.5f);
+				lives.Draw();
+				// Check for bullets hitting the player.
+				for (Bullet& b : bullets) {
+					if (b.GetBottomBoxBound() < player.GetTopBoxBound() &&
+						b.GetLeftBoxBound() <= player.GetRightBoxBound() &&
+						b.GetRightBoxBound() >= player.GetLeftBoxBound()) {
+						// The player was hit!
+						// Add an explosion animation.
+						animations.Add(ExplosionAnimation(b.GetCenterX(), b.GetBottomBoxBound()));
+						// Dispose of the bullet.
+						b.MoveOffScreen();
+						// Deduct a life from the player.
+						lives.RemoveLife();
+						// Once the player loses all lives, the game is over.
+						if (!lives.NumberLeft()) {
+							mode = GAME_MODE_DEAD;
+						}
+						// Only allow the player to get hit once per frame.
+						break;
 					}
-					// Only allow the player to get hit once per frame.
-					break;
 				}
 			}
 			REMOVE_OFFSCREEN_BULLETS(bullets);
@@ -335,7 +338,14 @@ int main(int argc, char *argv[])
 			for (auto& c : invaders) {
 				// If an invader makes it past the player, the game is over.
 				if (c.back().GetTopBoxBound() < player.GetBottomBoxBound()) {
-					mode = GAME_MODE_DEAD;
+					if (immortal) {
+						animations.Add(ExplosionAnimation(c.back().GetCenterX(), c.back().GetCenterY()));
+						c.pop_back();
+						continue;
+					}
+					else {
+						mode = GAME_MODE_DEAD;
+					}
 				}
 				// We only need to check for the invader at the bottom of the list
 				// because a bullet from the player cannot hit any invaders behind
