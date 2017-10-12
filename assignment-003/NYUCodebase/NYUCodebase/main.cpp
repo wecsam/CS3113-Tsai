@@ -224,6 +224,8 @@ int main(int argc, char *argv[])
 				b.Draw();
 			}
 			REMOVE_OFFSCREEN_BULLETS(bullets);
+			// Draw animations
+			animations.DrawAll();
 			SDL_GL_SwapWindow(displayWindow);
 		}
 		// Slide the start screen out toward the top.
