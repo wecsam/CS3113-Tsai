@@ -375,8 +375,17 @@ int main(int argc, char *argv[])
 			}
 			// Draw invaders
 			{
-				register float invaderXDelta = (invadersEntering ? -0.5f : (invadersGoingRight ? 0.005f : -0.005f)) / invaders.size() / invaders.size() * millisecondsElapsed;
-				register float invaderYDelta = -0.000005f * level * level * millisecondsElapsed;
+				register float invaderXDelta;
+				register float invaderYDelta;
+				if (invadersEntering) {
+					invaderXDelta = -0.5f / invaders.size() / invaders.size();
+					invaderYDelta = 0.0f;
+				}
+				else {
+					invaderXDelta = (invadersGoingRight ? 0.005f : -0.005f) / invaders.size() / invaders.size();
+					invaderYDelta = -0.000005f * level * level * millisecondsElapsed;
+				}
+				invaderXDelta *= millisecondsElapsed;
 				for (auto& c : invaders) {
 					for (Invader& a : c) {
 						a.Move(invaderXDelta, invaderYDelta);
