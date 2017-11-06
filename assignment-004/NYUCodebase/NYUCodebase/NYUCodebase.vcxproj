@@ -77,11 +77,14 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Matrix.cpp" />
+    <ClCompile Include="Rectangle.cpp" />
     <ClCompile Include="ShaderProgram.cpp" />
     <ClCompile Include="TileFile.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Dimensions.h" />
     <ClInclude Include="Matrix.h" />
+    <ClInclude Include="Rectangle.h" />
     <ClInclude Include="ShaderProgram.h" />
     <ClInclude Include="TileFile.h" />
   </ItemGroup>
