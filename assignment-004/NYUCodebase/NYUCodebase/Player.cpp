@@ -57,7 +57,7 @@ void Player::Stand() {
 	state = STAND;
 }
 void Player::Walk() {
-	state = static_cast<States>(WALK01 + SDL_GetTicks() % (NUM_STATES - WALK01));
+	state = static_cast<States>(WALK01 + SDL_GetTicks() / 100 % (NUM_STATES - WALK01));
 }
 void Player::ProcessInput(Uint32 mse) {
 	const Uint8* keys = SDL_GetKeyboardState(NULL);
