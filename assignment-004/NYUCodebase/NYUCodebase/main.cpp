@@ -15,6 +15,7 @@
 #include "Coin.h"
 #include "Dimensions.h"
 #include "Matrix.h"
+#include "Player.h"
 #include "ShaderProgram.h"
 #include "Tile.h"
 #include "TileFile.h"
@@ -135,6 +136,7 @@ int main(int argc, char *argv[])
 	// Load textures
 	GLuint Tsnow = LoadTexture(RESOURCE_FOLDER"snow.png");
 	GLuint Tcoin = LoadTexture(RESOURCE_FOLDER"coin.png");
+	GLuint Tplayer = LoadTexture(RESOURCE_FOLDER"Player.png");
 	// Create tiles
 	vector<Tile> tiles;
 	for (unsigned int i = 0; i < tileFile.GetMapHeight(); ++i) {
@@ -156,6 +158,7 @@ int main(int argc, char *argv[])
 	}
 	// Main game loop
 	Matrix view;
+	Player player(tileFile.RowFromTopToRowFromBottom(start->second.begin()->row), start->second.begin()->column + 1);
 	SDL_Event event;
 	bool done = false;
 	while (!done) {
@@ -172,6 +175,7 @@ int main(int argc, char *argv[])
 		for (const auto& coin : coins) {
 			DrawTrianglesWithTexture(coin.model * view, 2, coin.VERTICES, coin.texture, Tcoin);
 		}
+		DrawTrianglesWithTexture(player.model * view, 2, player.GetVertices(), player.GetTexture(), Tplayer);
 		SDL_GL_SwapWindow(displayWindow);
 	}
 	delete program;

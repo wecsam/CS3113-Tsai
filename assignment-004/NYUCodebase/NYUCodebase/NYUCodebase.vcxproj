@@ -78,6 +78,7 @@
     <ClCompile Include="Coin.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Matrix.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="Rectangle.cpp" />
     <ClCompile Include="ShaderProgram.cpp" />
     <ClCompile Include="Tile.cpp" />
@@ -87,6 +88,7 @@
     <ClInclude Include="Coin.h" />
     <ClInclude Include="Dimensions.h" />
     <ClInclude Include="Matrix.h" />
+    <ClInclude Include="Player.h" />
     <ClInclude Include="Rectangle.h" />
     <ClInclude Include="ShaderProgram.h" />
     <ClInclude Include="Tile.h" />
@@ -96,6 +98,10 @@
     <None Include="fragment.glsl" />
     <None Include="fragment_textured.glsl" />
     <None Include="vertex.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="PlayerStateData.txt" />
+    <Text Include="PlayerStateEnum.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
