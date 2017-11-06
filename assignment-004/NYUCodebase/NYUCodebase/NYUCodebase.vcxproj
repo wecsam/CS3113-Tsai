@@ -75,6 +75,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Coin.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="Rectangle.cpp" />
@@ -83,6 +84,7 @@
     <ClCompile Include="TileFile.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Coin.h" />
     <ClInclude Include="Dimensions.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Rectangle.h" />
