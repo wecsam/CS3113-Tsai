@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <chrono>
 #include <forward_list>
 #include <fstream>
@@ -27,6 +28,8 @@
 #endif
 using std::cerr;
 using std::forward_list;
+using std::max;
+using std::min;
 using std::vector;
 
 SDL_Window* displayWindow;
@@ -157,19 +160,61 @@ int main(int argc, char *argv[])
 		}
 	}
 	// Main game loop
+	float limitX = tileFile.GetMapWidth() * 0.5f - 2 * ORTHO_X_BOUND;
 	Matrix view;
 	Player player(tileFile.RowFromTopToRowFromBottom(start->second.begin()->row), start->second.begin()->column + 1);
 	SDL_Event event;
 	bool done = false;
 	while (!done) {
+		Uint32 mse = MillisecondsElapsed();
 		while (SDL_PollEvent(&event)) {
 			if (event.type == SDL_QUIT || event.type == SDL_WINDOWEVENT_CLOSE) {
 				done = true;
 			}
 		}
+		player.ProcessInput(mse);
+		view.SetPosition(-min(max(player.GetCenterX(), 0.0f), limitX), -player.GetCenterY(), 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
-		MillisecondsElapsed();
 		for (const auto& tile : tiles) {
+			if (tile.GetLeftBoxBound() < player.GetCenterX() && player.GetCenterX() <= tile.GetRightBoxBound()) {
+				// Check for a collision with the player's bottom edge.
+				if (tile.GetBottomBoxBound() < player.GetBottomBoxBound()) {
+					register float topBound = tile.GetTopBoxBound();
+					// Some tiles are sloped.
+					switch (tile.GetID()) {
+					case 25:
+						// Diagonal from bottom left to top right
+						if (player.GetRightBoxBound() < tile.GetRightBoxBound()) {
+							topBound -= (tile.GetRightBoxBound() - player.GetRightBoxBound()) / tile.GetWidth() * tile.GetHeight();
+						}
+						break;
+					case 32:
+						// Diagonal from top left to bottom right
+						if (tile.GetLeftBoxBound() < player.GetLeftBoxBound()) {
+							topBound -= (player.GetLeftBoxBound() - tile.GetLeftBoxBound()) / tile.GetWidth() * tile.GetHeight();
+						}
+						break;
+					}
+					// Check whether the player is touching the top of this tile.
+					if (player.GetBottomBoxBound() <= topBound) {
+						player.StayAbove(topBound);
+					}
+				}
+				// Check for a collision with the player's top edge.
+				else if (tile.GetBottomBoxBound() < player.GetTopBoxBound() && player.GetTopBoxBound() <= tile.GetTopBoxBound()) {
+					player.StayBelow(tile.GetBottomBoxBound());
+				}
+			}
+			if (tile.GetBottomBoxBound() < player.GetCenterY() && player.GetCenterY() <= tile.GetTopBoxBound()) {
+				// Check for a collision with the player's right edge.
+				if (tile.GetLeftBoxBound() < player.GetRightBoxBound() && player.GetRightBoxBound() <= tile.GetRightBoxBound()) {
+					player.StayToLeftOf(tile.GetLeftBoxBound());
+				}
+				// Check for a collision with the player's left edge.
+				else if (tile.GetLeftBoxBound() < player.GetLeftBoxBound() && player.GetLeftBoxBound() <= tile.GetRightBoxBound()) {
+					player.StayToRightOf(tile.GetRightBoxBound());
+				}
+			}
 			DrawTrianglesWithTexture(tile.model * view, 2, tile.VERTICES, tile.texture, Tsnow);
 		}
 		for (const auto& coin : coins) {
