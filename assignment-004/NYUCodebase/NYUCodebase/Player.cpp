@@ -6,7 +6,7 @@ float lerp(float v0, float v1, float t) {
 	return (1.0f - t) * v0 + t * v1;
 }
 Player::Player(unsigned int row, unsigned int column)
-	: Rectangle(row, column) {
+	: Rectangle(row, column), ContainsCenterOf(this) {
 	Stand();
 }
 const float* Player::GetVertices() const {
@@ -31,6 +31,12 @@ bool Player::_ContainsCenterOf::operator()(const Rectangle& other) const {
 	// Return whether the center of the other rectangle is within the bounds of this Player.
 	return parent->GetLeftBoxBound() <= other.GetCenterX() && other.GetCenterX() <= parent->GetRightBoxBound() &&
 		parent->GetBottomBoxBound() <= other.GetCenterY() && other.GetCenterY() <= parent->GetTopBoxBound();
+}
+Player::_ContainsCenterOf::_ContainsCenterOf(Player* parent)
+	: parent(parent) {}
+void Player::StayAbove(float y) {
+	model.Translate(0.0f, y - GetBottomBoxBound(), 0.0f);
+	velocityY = 0.0f;
 }
 void Player::StayToRightOf(float x) {
 	model.Translate(x - GetLeftBoxBound(), 0.0f, 0.0f);

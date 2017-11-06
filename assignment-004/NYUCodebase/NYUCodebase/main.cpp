@@ -217,6 +217,7 @@ int main(int argc, char *argv[])
 			}
 			DrawTrianglesWithTexture(tile.model * view, 2, tile.VERTICES, tile.texture, Tsnow);
 		}
+		coins.remove_if(player.ContainsCenterOf);
 		for (const auto& coin : coins) {
 			DrawTrianglesWithTexture(coin.model * view, 2, coin.VERTICES, coin.texture, Tcoin);
 		}

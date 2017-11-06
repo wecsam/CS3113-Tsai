@@ -17,6 +17,14 @@ struct Player : Rectangle {
 	void Stand();
 	void Walk();
 	void ProcessInput(Uint32 MillisecondsElapsed);
+	class _ContainsCenterOf {
+	public:
+		bool operator()(const Rectangle&) const;
+		friend Player;
+	private:
+		_ContainsCenterOf(Player*);
+		Player* parent;
+	} ContainsCenterOf;
 #include "PlayerStateEnum.txt"
 	static const float STATE_VERTICES[][NUM_VERTICES];
 	static const float STATE_TEXTURE[][NUM_VERTICES];
