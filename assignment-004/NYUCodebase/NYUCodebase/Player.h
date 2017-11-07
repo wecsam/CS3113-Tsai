@@ -1,7 +1,7 @@
 #pragma once
 #include <SDL.h>
 #include "Rectangle.h"
-struct Player : Rectangle {
+struct Player : public Rectangle {
 	Player(unsigned int row, unsigned int column);
 	const float* GetVertices() const;
 	const float* GetTexture() const;
