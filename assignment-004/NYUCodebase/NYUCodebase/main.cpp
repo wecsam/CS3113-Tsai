@@ -17,6 +17,7 @@
 #include "Dimensions.h"
 #include "Matrix.h"
 #include "Player.h"
+#include "Rock.h"
 #include "ShaderProgram.h"
 #include "Tile.h"
 #include "TileFile.h"
@@ -139,6 +140,7 @@ int main(int argc, char *argv[])
 	// Load textures
 	GLuint Tsnow = LoadTexture(RESOURCE_FOLDER"snow.png");
 	GLuint Tcoin = LoadTexture(RESOURCE_FOLDER"coin.png");
+	GLuint Trock = LoadTexture(RESOURCE_FOLDER"rock.png");
 	GLuint Tplayer = LoadTexture(RESOURCE_FOLDER"Player.png");
 	// Create tiles
 	vector<Tile> tiles;
@@ -151,6 +153,7 @@ int main(int argc, char *argv[])
 	}
 	// Loop to reset upon death of player
 	auto coinLocations = tileFile.GetEntities().find("Coin");
+	auto rockLocations = tileFile.GetEntities().find("Rock");
 	SDL_Event event;
 	float limitX = tileFile.GetMapWidth() * 0.5f - 2 * ORTHO_X_BOUND,
 		limitYBottom = tileFile.GetMapHeight() * -0.5f - ORTHO_Y_BOUND;
@@ -163,14 +166,45 @@ int main(int argc, char *argv[])
 				coins.emplace_front(tileFile.RowFromTopToRowFromBottom(location.row - 1), location.column);
 			}
 		}
+		// Create rocks
+		Rock* rockOnTop = nullptr;
+		forward_list<Rock> rocks;
+		if (rockLocations != tileFile.GetEntities().end()) {
+			for (const auto& location : rockLocations->second) {
+				rocks.emplace_front(tileFile.RowFromTopToRowFromBottom(location.row - 1), location.column);
+			}
+		}
+		// Create player
 		Matrix view;
 		Player player(tileFile.RowFromTopToRowFromBottom(start->second.begin()->row), start->second.begin()->column + 1);
 		// Main game loop
 		while (!done) {
 			Uint32 mse = MillisecondsElapsed();
 			while (SDL_PollEvent(&event)) {
-				if (event.type == SDL_QUIT || event.type == SDL_WINDOWEVENT_CLOSE) {
+				switch (event.type) {
+				case SDL_QUIT:
+				case SDL_WINDOWEVENT_CLOSE:
 					done = true;
+					break;
+				case SDL_KEYDOWN:
+					switch (event.key.keysym.scancode) {
+					case SDL_SCANCODE_SPACE:
+						// Throw a rock.
+						if (rockOnTop) {
+							rockOnTop->model.Translate(0.5f, -0.6f, 0.0f);
+							rockOnTop->Fall();
+							// Remove this rock.
+							Rectangle* following = rockOnTop->GetFollowing();
+							if (following == &player) {
+								rockOnTop = nullptr;
+							}
+							else {
+								rockOnTop = static_cast<Rock*>(following);
+							}
+						}
+						break;
+					}
+					break;
 				}
 			}
 			if (player.GetCenterY() < limitYBottom) {
@@ -179,6 +213,7 @@ int main(int argc, char *argv[])
 			player.ProcessInput(mse);
 			view.SetPosition(-min(max(player.GetCenterX(), 0.0f), limitX), -player.GetCenterY(), 0.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
+			// Draw tiles
 			for (const auto& tile : tiles) {
 				if (tile.GetLeftBoxBound() < player.GetCenterX() && player.GetCenterX() <= tile.GetRightBoxBound()) {
 					// Check for a collision with the player's bottom edge.
@@ -221,10 +256,38 @@ int main(int argc, char *argv[])
 				}
 				DrawTrianglesWithTexture(tile.model * view, 2, tile.VERTICES, tile.texture, Tsnow);
 			}
+			// Remove coins that are touching the player or falling rocks.
 			coins.remove_if(player.ContainsCenterOf);
+			for (const auto& rock : rocks) {
+				coins.remove_if(rock.TouchedSinceLastFrame);
+			}
+			// Draw coins
 			for (const auto& coin : coins) {
 				DrawTrianglesWithTexture(coin.model * view, 2, coin.VERTICES, coin.texture, Tcoin);
 			}
+			// Remove rocks that have fallen out of view.
+			rocks.remove_if([](const Rock& rock) { return rock.IsFalling() && rock.GetTopBoxBound() < -10.0f; });
+			// Draw rocks
+			for (auto& rock : rocks) {
+				// If the player has hit this rock, put the rock above the player.
+				if (rock.IsNotFollowingOrMoving() && player.ContainsCenterOf(rock)) {
+					if (rockOnTop) {
+						// There is already a rock above the player.
+						// Put the rock above that rock.
+						rock.Follow(rockOnTop);
+					}
+					else {
+						// Put the rock above the player.
+						rock.Follow(&player);
+					}
+					rockOnTop = &rock;
+				}
+				// Update the position of the rock.
+				rock.UpdateModel(mse);
+				// Draw the rock.
+				DrawTrianglesWithTexture(rock.model * view, 2, rock.VERTICES, rock.texture, Trock);
+			}
+			// Draw player
 			DrawTrianglesWithTexture(player.model * view, 2, player.GetVertices(), player.GetTexture(), Tplayer);
 			SDL_GL_SwapWindow(displayWindow);
 		}
