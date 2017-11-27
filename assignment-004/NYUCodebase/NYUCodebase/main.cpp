@@ -57,7 +57,7 @@ GLuint LoadTexture(const char *filePath) {
 
 // From assignment 3
 Uint32 MillisecondsElapsed() {
-	static Uint32 lastFrameTick = 0;
+	static Uint32 lastFrameTick = SDL_GetTicks();
 	Uint32 thisFrameTick, delta;
 	while (true) {
 		// Calculate the number of milliseconds that have elapsed since the last call to this function.
