@@ -13,6 +13,7 @@ struct Player : public Rectangle {
 	void StayToRightOf(float x);
 	void StayBelow(float y);
 	void StayToLeftOf(float x);
+	float GetVelocityY() const;
 	void Jump();
 	void Stand();
 	void Walk();

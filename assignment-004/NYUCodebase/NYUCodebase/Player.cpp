@@ -50,6 +50,9 @@ void Player::StayToLeftOf(float x) {
 	model.Translate(x - GetRightBoxBound(), 0.0f, 0.0f);
 	velocityX = 0.0f;
 }
+float Player::GetVelocityY() const {
+	return velocityY;
+}
 void Player::Jump() {
 	state = JUMP;
 }

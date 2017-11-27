@@ -3,6 +3,7 @@
 #include <forward_list>
 #include <fstream>
 #include <iostream>
+#include <list>
 #include <thread>
 #include <vector>
 #ifdef _WINDOWS
@@ -11,6 +12,7 @@
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include <SDL_image.h>
+#include <SDL_mixer.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "Coin.h"
@@ -29,6 +31,7 @@
 #endif
 using std::cerr;
 using std::forward_list;
+using std::list;
 using std::max;
 using std::min;
 using std::vector;
@@ -105,6 +108,7 @@ int main(int argc, char *argv[])
 	glClearColor(0.0f, 0.3f, 0.6f, 1.0f);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 4096);
 	float fullscreenVertices[12];
 	float fullscreenTextureCoordinates[12];
 	Rectangle::SetBox(fullscreenVertices, ORTHO_Y_BOUND, ORTHO_X_BOUND, -ORTHO_Y_BOUND, -ORTHO_X_BOUND);
@@ -148,6 +152,12 @@ int main(int argc, char *argv[])
 	GLuint Trock = LoadTexture(RESOURCE_FOLDER"rock.png");
 	GLuint Tplayer = LoadTexture(RESOURCE_FOLDER"Player.png");
 	GLuint TmessageThrow = LoadTexture(RESOURCE_FOLDER"msg-throw.png");
+	// Load sounds
+	auto Sjump = Mix_LoadWAV(RESOURCE_FOLDER"jump.wav");
+	auto Sland = Mix_LoadWAV(RESOURCE_FOLDER"land.wav");
+	auto Spickup = Mix_LoadWAV(RESOURCE_FOLDER"pickup.wav");
+	auto SrockGet = Mix_LoadWAV(RESOURCE_FOLDER"rock-get.wav");
+	auto SrockThrow = Mix_LoadWAV(RESOURCE_FOLDER"rock-throw.wav");
 	// Create tiles
 	vector<Tile> tiles;
 	for (unsigned int i = 0; i < tileFile.GetMapHeight(); ++i) {
@@ -166,7 +176,7 @@ int main(int argc, char *argv[])
 	bool done = false;
 	while (!done) {
 		// Create coins
-		forward_list<Coin> coins;
+		list<Coin> coins;
 		if (coinLocations != tileFile.GetEntities().end()) {
 			for (const auto& location : coinLocations->second) {
 				coins.emplace_front(tileFile.RowFromTopToRowFromBottom(location.row - 1), location.column);
@@ -183,6 +193,7 @@ int main(int argc, char *argv[])
 		// Create player
 		Matrix view;
 		Player player(tileFile.RowFromTopToRowFromBottom(start->second.begin()->row), start->second.begin()->column + 1);
+		float oldPlayerVelocityY = 0.0f;
 		// Main game loop
 		while (!done) {
 			Uint32 mse = MillisecondsElapsed();
@@ -197,6 +208,7 @@ int main(int argc, char *argv[])
 					case SDL_SCANCODE_SPACE:
 						// Throw a rock.
 						if (rockOnTop) {
+							Mix_PlayChannel(-1, SrockThrow, 0);
 							rockOnTop->model.Translate(0.5f, -0.6f, 0.0f);
 							rockOnTop->Fall();
 							// Remove this rock.
@@ -263,9 +275,13 @@ int main(int argc, char *argv[])
 				DrawTrianglesWithTexture(tile.model * view, 2, tile.VERTICES, tile.texture, Tsnow);
 			}
 			// Remove coins that are touching the player or falling rocks.
+			auto oldNumberOfCoins = coins.size();
 			coins.remove_if(player.ContainsCenterOf);
 			for (const auto& rock : rocks) {
 				coins.remove_if(rock.TouchedSinceLastFrame);
+			}
+			if (coins.size() != oldNumberOfCoins) {
+				Mix_PlayChannel(-1, Spickup, 0);
 			}
 			// Draw coins
 			for (const auto& coin : coins) {
@@ -277,6 +293,7 @@ int main(int argc, char *argv[])
 			for (auto& rock : rocks) {
 				// If the player has hit this rock, put the rock above the player.
 				if (rock.IsNotFollowingOrMoving() && player.ContainsCenterOf(rock)) {
+					Mix_PlayChannel(-1, SrockGet, 0);
 					if (rockOnTop) {
 						// There is already a rock above the player.
 						// Put the rock above that rock.
@@ -294,6 +311,13 @@ int main(int argc, char *argv[])
 				DrawTrianglesWithTexture(rock.model * view, 2, rock.VERTICES, rock.texture, Trock);
 			}
 			// Draw player
+			if (oldPlayerVelocityY == 0.0f && player.GetVelocityY() > 0.0f) {
+				Mix_PlayChannel(-1, Sjump, 0);
+			}
+			else if (oldPlayerVelocityY < 0.0f && player.GetVelocityY() == 0.0f) {
+				Mix_PlayChannel(-1, Sland, 0);
+			}
+			oldPlayerVelocityY = player.GetVelocityY();
 			DrawTrianglesWithTexture(player.model * view, 2, player.GetVertices(), player.GetTexture(), Tplayer);
 			// Draw the message to throw the rock.
 			if (rockOnTop) {
@@ -302,6 +326,11 @@ int main(int argc, char *argv[])
 			SDL_GL_SwapWindow(displayWindow);
 		}
 	}
+	Mix_FreeChunk(Sjump);
+	Mix_FreeChunk(Sland);
+	Mix_FreeChunk(Spickup);
+	Mix_FreeChunk(SrockGet);
+	Mix_FreeChunk(SrockThrow);
 	delete program;
 	SDL_Quit();
 	return 0;
