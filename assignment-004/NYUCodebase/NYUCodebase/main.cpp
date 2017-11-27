@@ -33,6 +33,7 @@ using std::max;
 using std::min;
 using std::vector;
 
+const Matrix IDENTITY;
 SDL_Window* displayWindow;
 ShaderProgram* program;
 
@@ -104,6 +105,10 @@ int main(int argc, char *argv[])
 	glClearColor(0.0f, 0.3f, 0.6f, 1.0f);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	float fullscreenVertices[12];
+	float fullscreenTextureCoordinates[12];
+	Rectangle::SetBox(fullscreenVertices, ORTHO_Y_BOUND, ORTHO_X_BOUND, -ORTHO_Y_BOUND, -ORTHO_X_BOUND);
+	Rectangle::SetBox(fullscreenTextureCoordinates, 0.0f, 1.0f, 1.0f, 0.0f);
 	// Read the level data from the file.
 	TileFile tileFile;
 	try {
@@ -142,6 +147,7 @@ int main(int argc, char *argv[])
 	GLuint Tcoin = LoadTexture(RESOURCE_FOLDER"coin.png");
 	GLuint Trock = LoadTexture(RESOURCE_FOLDER"rock.png");
 	GLuint Tplayer = LoadTexture(RESOURCE_FOLDER"Player.png");
+	GLuint TmessageThrow = LoadTexture(RESOURCE_FOLDER"msg-throw.png");
 	// Create tiles
 	vector<Tile> tiles;
 	for (unsigned int i = 0; i < tileFile.GetMapHeight(); ++i) {
@@ -289,6 +295,10 @@ int main(int argc, char *argv[])
 			}
 			// Draw player
 			DrawTrianglesWithTexture(player.model * view, 2, player.GetVertices(), player.GetTexture(), Tplayer);
+			// Draw the message to throw the rock.
+			if (rockOnTop) {
+				DrawTrianglesWithTexture(IDENTITY, 2, fullscreenVertices, fullscreenTextureCoordinates, TmessageThrow);
+			}
 			SDL_GL_SwapWindow(displayWindow);
 		}
 	}
