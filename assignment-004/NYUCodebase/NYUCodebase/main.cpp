@@ -158,6 +158,10 @@ int main(int argc, char *argv[])
 	auto Spickup = Mix_LoadWAV(RESOURCE_FOLDER"pickup.wav");
 	auto SrockGet = Mix_LoadWAV(RESOURCE_FOLDER"rock-get.wav");
 	auto SrockThrow = Mix_LoadWAV(RESOURCE_FOLDER"rock-throw.wav");
+	auto Mbackground = Mix_LoadMUS(RESOURCE_FOLDER"Podington_Bear_-_Starling.wav");
+	// Start background music
+	Mix_VolumeMusic(MIX_MAX_VOLUME / 2);
+	Mix_PlayMusic(Mbackground, -1);
 	// Create tiles
 	vector<Tile> tiles;
 	for (unsigned int i = 0; i < tileFile.GetMapHeight(); ++i) {
@@ -331,6 +335,7 @@ int main(int argc, char *argv[])
 	Mix_FreeChunk(Spickup);
 	Mix_FreeChunk(SrockGet);
 	Mix_FreeChunk(SrockThrow);
+	Mix_FreeMusic(Mbackground);
 	delete program;
 	SDL_Quit();
 	return 0;
