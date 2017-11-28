@@ -24,6 +24,9 @@
 #include "Tile.h"
 #include "TileFile.h"
 #define TILE_FILE "demo.txt"
+#define FLOAT_TOLERANCE_TOP 3.490000111e-8f
+#define FLOAT_TOLERANCE_RIGHT 0.002890120028f
+#define FLOAT_TOLERANCE_BOTTOM 0.0007680099807f
 #ifdef _WINDOWS
 	#define RESOURCE_FOLDER ""
 #else
@@ -197,7 +200,7 @@ int main(int argc, char *argv[])
 		// Create player
 		Matrix view;
 		Player player(tileFile.RowFromTopToRowFromBottom(start->second.begin()->row), start->second.begin()->column + 1);
-		float oldPlayerVelocityY = 0.0f;
+		float oldPlayerVelocityY = 0.0f, oldPlayerTopBound = 0.0f, oldPlayerRightBound = 0.0f, oldPlayerBottomBound = 0.0f, oldPlayerLeftBound = 0.0f;
 		// Main game loop
 		while (!done) {
 			Uint32 mse = MillisecondsElapsed();
@@ -237,44 +240,52 @@ int main(int argc, char *argv[])
 			glClear(GL_COLOR_BUFFER_BIT);
 			// Draw tiles
 			for (const auto& tile : tiles) {
-				if (tile.GetLeftBoxBound() < player.GetCenterX() && player.GetCenterX() <= tile.GetRightBoxBound()) {
-					// Check for a collision with the player's bottom edge.
-					if (tile.GetBottomBoxBound() < player.GetBottomBoxBound()) {
-						register float topBound = tile.GetTopBoxBound();
-						// Some tiles are sloped.
-						switch (tile.GetID()) {
-						case 25:
-							// Diagonal from bottom left to top right
-							if (player.GetRightBoxBound() < tile.GetRightBoxBound()) {
-								topBound -= (tile.GetRightBoxBound() - player.GetRightBoxBound()) / tile.GetWidth() * tile.GetHeight();
-							}
-							break;
-						case 32:
-							// Diagonal from top left to bottom right
-							if (tile.GetLeftBoxBound() < player.GetLeftBoxBound()) {
-								topBound -= (player.GetLeftBoxBound() - tile.GetLeftBoxBound()) / tile.GetWidth() * tile.GetHeight();
-							}
-							break;
-						}
-						// Check whether the player is touching the top of this tile.
-						if (player.GetBottomBoxBound() <= topBound) {
+				// Stop the player from sinking through a tile or walking through a wall.
+				switch (tile.GetID()) {
+				case 25: // Diagonal from bottom left to top right
+					// Check whether the player's right edge is in this tile's column.
+					if (tile.GetLeftBoxBound() <= player.GetRightBoxBound() && player.GetRightBoxBound() <= tile.GetRightBoxBound() + FLOAT_TOLERANCE_RIGHT) {
+						// Check whether the player's bottom edge is inside this tile.
+						float topBound = tile.GetTopBoxBound() - (tile.GetRightBoxBound() - player.GetRightBoxBound()) * (tile.GetHeight() / tile.GetWidth());
+						if (tile.GetBottomBoxBound() - FLOAT_TOLERANCE_BOTTOM <= player.GetBottomBoxBound() && player.GetBottomBoxBound() <= topBound) {
 							player.StayAbove(topBound);
 						}
 					}
-					// Check for a collision with the player's top edge.
-					else if (tile.GetBottomBoxBound() < player.GetTopBoxBound() && player.GetTopBoxBound() <= tile.GetTopBoxBound()) {
-						player.StayBelow(tile.GetBottomBoxBound());
+					break;
+				case 32: // Diagonal from top left to bottom right
+					// Check whether the player's left edge is in this tile's column.
+					if (tile.GetLeftBoxBound() <= player.GetLeftBoxBound() && player.GetLeftBoxBound() <= tile.GetRightBoxBound()) {
+						// Check whether the player's bottom edge is inside this tile.
+						float topBound = tile.GetTopBoxBound() - (player.GetLeftBoxBound() - tile.GetLeftBoxBound()) * (tile.GetHeight() / tile.GetWidth());
+						if (tile.GetBottomBoxBound() - FLOAT_TOLERANCE_BOTTOM <= player.GetBottomBoxBound() && player.GetBottomBoxBound() <= topBound) {
+							player.StayAbove(topBound);
+						}
 					}
-				}
-				if (tile.GetBottomBoxBound() < player.GetCenterY() && player.GetCenterY() <= tile.GetTopBoxBound()) {
-					// Check for a collision with the player's right edge.
-					if (tile.GetLeftBoxBound() < player.GetRightBoxBound() && player.GetRightBoxBound() <= tile.GetRightBoxBound()) {
-						player.StayToLeftOf(tile.GetLeftBoxBound());
+					break;
+				default:
+					// Check whether the player is touching this tile's column.
+					if (tile.GetLeftBoxBound() <= player.GetRightBoxBound() && player.GetLeftBoxBound() <= tile.GetRightBoxBound()) {
+						// Check whether the player's bottom edge sank below the top edge of this tile.
+						if (player.GetBottomBoxBound() <= tile.GetTopBoxBound() && tile.GetTopBoxBound() <= oldPlayerBottomBound + FLOAT_TOLERANCE_TOP) {
+							player.StayAbove(tile.GetTopBoxBound());
+						}
+						// Check whether the player's top edge rose above the bottom edge of this tile.
+						else if (oldPlayerTopBound <= tile.GetBottomBoxBound() && tile.GetBottomBoxBound() <= player.GetTopBoxBound()) {
+							player.StayBelow(tile.GetBottomBoxBound());
+						}
 					}
-					// Check for a collision with the player's left edge.
-					else if (tile.GetLeftBoxBound() < player.GetLeftBoxBound() && player.GetLeftBoxBound() <= tile.GetRightBoxBound()) {
-						player.StayToRightOf(tile.GetRightBoxBound());
+					// Check whether the player is touching this tile's row.
+					if (tile.GetBottomBoxBound() <= player.GetTopBoxBound() && player.GetBottomBoxBound() < tile.GetTopBoxBound()) {
+						// Check whether the player's left edge moved past this tile's right edge.
+						if (player.GetLeftBoxBound() <= tile.GetRightBoxBound() && tile.GetRightBoxBound() <= oldPlayerLeftBound) {
+							player.StayToRightOf(tile.GetRightBoxBound());
+						}
+						// Check whether the player's right edge moved past this tile's left edge.
+						else if (oldPlayerRightBound <= tile.GetLeftBoxBound() && tile.GetLeftBoxBound() <= player.GetRightBoxBound()) {
+							player.StayToLeftOf(tile.GetLeftBoxBound());
+						}
 					}
+					break;
 				}
 				DrawTrianglesWithTexture(tile.model * view, 2, tile.VERTICES, tile.texture, Tsnow);
 			}
@@ -322,6 +333,10 @@ int main(int argc, char *argv[])
 				Mix_PlayChannel(-1, Sland, 0);
 			}
 			oldPlayerVelocityY = player.GetVelocityY();
+			oldPlayerTopBound = player.GetTopBoxBound();
+			oldPlayerRightBound = player.GetRightBoxBound();
+			oldPlayerBottomBound = player.GetBottomBoxBound();
+			oldPlayerLeftBound = player.GetLeftBoxBound();
 			DrawTrianglesWithTexture(player.model * view, 2, player.GetVertices(), player.GetTexture(), Tplayer);
 			// Draw the message to throw the rock.
 			if (rockOnTop) {
