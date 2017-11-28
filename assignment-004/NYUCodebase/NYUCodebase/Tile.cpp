@@ -21,7 +21,3 @@ Tile::Tile(unsigned int id, unsigned int row, unsigned int column)
 unsigned int Tile::GetID() const {
 	return id;
 }
-const float Tile::VERTICES[] = {
-	0.0f, 0.5f, 0.0f, 0.0f, 0.5f, 0.5f,
-	0.5f, 0.5f, 0.0f, 0.0f, 0.5f, 0.0f
-};

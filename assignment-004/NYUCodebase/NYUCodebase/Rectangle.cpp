@@ -57,3 +57,7 @@ void Rectangle::SetBox(float* a, float top, float right, float bottom, float lef
 	SetBoxRight(a, right);
 	SetBoxBottom(a, bottom);
 }
+const float Rectangle::VERTICES[] = {
+	0.0f, 0.5f, 0.0f, 0.0f, 0.5f, 0.5f,
+	0.5f, 0.5f, 0.0f, 0.0f, 0.5f, 0.0f
+};
