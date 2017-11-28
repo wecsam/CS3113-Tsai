@@ -1,5 +1,5 @@
 #include "Player.h"
-#define GRAVITY -0.000003f
+#include "Dimensions.h"
 #define HORIZONTAL_SPEED_LIMIT 0.0015f
 #define JUMP_SPEED 0.0012f
 float lerp(float v0, float v1, float t) {
@@ -49,6 +49,9 @@ void Player::StayBelow(float y) {
 void Player::StayToLeftOf(float x) {
 	model.Translate(x - GetRightBoxBound(), 0.0f, 0.0f);
 	velocityX = 0.0f;
+}
+float Player::GetVelocityY() const {
+	return velocityY;
 }
 void Player::Jump() {
 	state = JUMP;
