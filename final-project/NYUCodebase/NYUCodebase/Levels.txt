@@ -106,7 +106,7 @@ FacingLeft=true
 
 [Entities]
 type=Switch
-location=1,2,1,2
+location=2,2,1,2
 DoorX=6
 DoorY=3
 FacingLeft=true

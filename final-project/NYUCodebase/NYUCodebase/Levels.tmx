@@ -103,7 +103,7 @@
     <property name="FacingLeft" type="bool" value="true"/>
    </properties>
   </object>
-  <object id="8" type="Switch" gid="158" x="297.996" y="298.003" width="256" height="299">
+  <object id="8" type="Switch" gid="158" x="298" y="298" width="256" height="299">
    <properties>
     <property name="DoorX" type="int" value="6"/>
     <property name="DoorY" type="int" value="3"/>
