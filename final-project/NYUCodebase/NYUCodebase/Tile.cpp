@@ -1,8 +1,5 @@
 #include "Tile.h"
 #include <cstdlib>
-// The spacing from one tile to the next
-#define TILE_TEXTURE_WIDTH 1.0f
-#define TILE_TEXTURE_HEIGHT 0.58203125f
 // The dimensions of the texture sheet
 #define TEXTURE_SHEET_WIDTH_PX 7936
 #define TEXTURE_SHEET_HEIGHT_PX 1794
@@ -16,18 +13,9 @@
 // When a player is walking over a door, draw this tile over the player
 // to make it look like the player is walking through the doorway.
 const Tile::TileType DOOR_Z_COVERS[] = { 137, 138, 131, 132 };
-// Convert isometric coordinates to screen coordinates.
-// Every tile is translated from the origin by (TILE_TEXTURE_WIDTH / 2, TILE_TEXTURE_HEIGHT / 2) for every column from the left
-// and by (-TILE_TEXTURE_WIDTH / 2, -TILE_TEXTURE_HEIGHT / 2) for every row from the top.
-//     (x', y') = (0, 0) + x * (TILE_TEXTURE_WIDTH / 2, -TILE_TEXTURE_HEIGHT / 2) + y * (-TILE_TEXTURE_WIDTH / 2, -TILE_TEXTURE_HEIGHT / 2)
-// Now, just some algebra:
-//     x' = x * TILE_TEXTURE_WIDTH / 2 + y * -TILE_TEXTURE_WIDTH / 2 = (x - y) * TILE_TEXTURE_WIDTH / 2
-//     y' = x * -TILE_TEXTURE_HEIGHT / 2 + y * -TILE_TEXTURE_HEIGHT / 2 = (x + y) * -TILE_TEXTURE_HEIGHT / 2
+// Place the tile on the isometric grid.
 Tile::Tile(float row, float column, Tile::TileType type)
-	: Rectangle(
-		(column - row) * TILE_TEXTURE_WIDTH / 2, (column + row) * -TILE_TEXTURE_HEIGHT / 2,
-		TILE_RECT_WIDTH * 0.5f, TILE_RECT_HEIGHT * 0.5f
-	) {
+	: Rectangle(ISOMETRIC_TO_SCREEN(row, column), TILE_RECT_WIDTH * 0.5f, TILE_RECT_HEIGHT * 0.5f) {
 	SetType(type);
 }
 Tile::TileType Tile::GetType() const {
