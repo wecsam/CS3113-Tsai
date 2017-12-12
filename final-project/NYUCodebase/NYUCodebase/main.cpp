@@ -1,6 +1,7 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <list>
 #include <thread>
 #include <vector>
 #ifdef _WINDOWS
@@ -11,6 +12,7 @@
 #include <SDL_image.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include "Character.h"
 #include "Dimensions.h"
 #include "Input.h"
 #include "Matrix.h"
@@ -18,6 +20,7 @@
 #include "Tile.h"
 #include "TileFile.h"
 #define TILE_FILE "Levels.txt"
+#define PLAYER_VELOCITY 0.001f
 #ifdef _WINDOWS
 	#define RESOURCE_FOLDER ""
 #else
@@ -25,6 +28,7 @@
 #endif
 using std::cerr;
 using std::ifstream;
+using std::list;
 using std::vector;
 enum GameMode {	MODE_QUIT, MODE_START, MODE_PLAY, MODE_END };
 SDL_Window* displayWindow;
@@ -71,6 +75,17 @@ void DrawTrianglesWithTexture(const Matrix& ModelviewMatrix, GLsizei numTriangle
 	glDisableVertexAttribArray(program->positionAttribute);
 	glDisableVertexAttribArray(program->texCoordAttribute);
 }
+template<typename CompareType>
+struct RectangleAndTextureID {
+	RectangleAndTextureID(const Rectangle* Rectangle, unsigned int TextureID, CompareType Comparee)
+		: Rectangle(Rectangle), TextureID(TextureID), Comparee(Comparee) {}
+	static bool GreaterThan(const RectangleAndTextureID& a, const RectangleAndTextureID& b) {
+		return a.Comparee > b.Comparee;
+	}
+	const Rectangle* Rectangle;
+	unsigned int TextureID;
+	CompareType Comparee;
+};
 int main(int argc, char *argv[]) {
 	// Set up the SDL and OpenGL.
 	SDL_Init(SDL_INIT_VIDEO);
@@ -125,34 +140,104 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	}
+	// Find the starting locations of the player and the helper AI.
+	auto playerStart = tileFile.GetEntities().find("Player");
+	if (playerStart == tileFile.GetEntities().end()) {
+		cerr << "The player's start location is missing.\n";
+		return 5;
+	}
+	if (playerStart->second.size() != 1) {
+		cerr << "There must be exactly one starting location for the player.\n";
+		return 6;
+	}
+	auto helperStart = tileFile.GetEntities().find("AI");
+	if (helperStart == tileFile.GetEntities().end()) {
+		cerr << "The helper AI's start location is missing.\n";
+		return 5;
+	}
+	if (helperStart->second.size() != 1) {
+		cerr << "There must be exactly one starting location for the helper AI.\n";
+		return 6;
+	}
 	// Load textures.
 	auto Ttiles = LoadTexture(RESOURCE_FOLDER"Images/Prototype_31x6.png");
+	auto Tbetty = LoadTexture(RESOURCE_FOLDER"Images/Betty.png");
+	auto Tgeorge = LoadTexture(RESOURCE_FOLDER"Images/George.png");
 	// Start the game.
 	GameMode mode = MODE_START;
 	while (mode != MODE_QUIT) {
-		Matrix view;
-		view.Translate(3.0f, 4.0f, 0.0f);
 		while (mode == MODE_START) {
 			// TODO: make a start screen
 			mode = MODE_PLAY;
 		}
-		while (mode == MODE_PLAY) {
-			Input input;
-			if (input.QuitRequested) {
-				mode = MODE_QUIT;
+		{
+			Matrix view;
+			Character player(ISOMETRIC_TO_SCREEN(playerStart->second.begin()->Row, playerStart->second.begin()->Column));
+			Character helper(ISOMETRIC_TO_SCREEN(helperStart->second.begin()->Row, helperStart->second.begin()->Column));
+			while (mode == MODE_PLAY) {
+				// Process input.
+				auto ms = MillisecondsElapsed();
+				Input input;
+				if (input.QuitRequested) {
+					mode = MODE_QUIT;
+				}
+				else if (input.EscapePressed) {
+					mode = MODE_START;
+				}
+				switch (input.PlayerDirection) {
+				case Input::DOWN:
+					player.Model.Translate(0.0f, ms * -PLAYER_VELOCITY, 0.0f);
+					player.Face(Character::DOWN);
+					player.Walk();
+					break;
+				case Input::LEFT:
+					player.Model.Translate(ms * -PLAYER_VELOCITY, 0.0f, 0.0f);
+					player.Face(Character::LEFT);
+					player.Walk();
+					break;
+				case Input::UP:
+					player.Model.Translate(0.0f, ms * PLAYER_VELOCITY, 0.0f);
+					player.Face(Character::UP);
+					player.Walk();
+					break;
+				case Input::RIGHT:
+					player.Model.Translate(ms * PLAYER_VELOCITY, 0.0f, 0.0f);
+					player.Face(Character::RIGHT);
+					player.Walk();
+					break;
+				default:
+					player.Stand();
+				}
+				// Clear screen.
+				glClear(GL_COLOR_BUFFER_BIT);
+				// Set the view matrix so that the view is centered on the player.
+				view.SetPosition(-player.GetCenterX(), -player.GetCenterY(), 0.0f);
+				// Draw the floor.
+				for (const auto& tile : tilesFloor) {
+					DrawTrianglesWithTexture(tile.Model * view, 2, tile.GetVertices(), tile.GetTextureCoordinates(), Ttiles);
+				}
+				// Draw walls above the player or helper, draw the player or helper, draw the walls between the
+				// player and helper, draw the other character, and then draw walls below that character.
+				{
+					list<RectangleAndTextureID<float>> drawList;
+					// Add all walls to the draw list.
+					for (const auto& tile : tilesWalls) {
+						// TODO: use the diagonal edge of the wall instead of a flat Y value
+						drawList.emplace_back(&tile, Ttiles, tile.GetCenterY() - TILE_TEXTURE_HEIGHT * 0.125f);
+					}
+					// Add characters to the other list.
+					drawList.emplace_back(&player, Tbetty, player.GetCenterY());
+					drawList.emplace_back(&helper, Tgeorge, helper.GetCenterY());
+					// Sort the list from top to bottom.
+					drawList.sort(RectangleAndTextureID<float>::GreaterThan);
+					// Draw the rectangles.
+					for (const auto& r : drawList) {
+						DrawTrianglesWithTexture(r.Rectangle->Model * view, 2, r.Rectangle->GetVertices(), r.Rectangle->GetTextureCoordinates(), r.TextureID);
+					}
+				}
+				// Update screen.
+				SDL_GL_SwapWindow(displayWindow);
 			}
-			else if (input.EscapePressed) {
-				mode = MODE_START;
-			}
-			glClear(GL_COLOR_BUFFER_BIT);
-			Uint32 mse = MillisecondsElapsed();
-			for (const auto& tile : tilesFloor) {
-				DrawTrianglesWithTexture(tile.Model * view, 2, tile.GetVertices(), tile.GetTextureCoordinates(), Ttiles);
-			}
-			for (const auto& tile : tilesWalls) {
-				DrawTrianglesWithTexture(tile.Model * view, 2, tile.GetVertices(), tile.GetTextureCoordinates(), Ttiles);
-			}
-			SDL_GL_SwapWindow(displayWindow);
 		}
 		while (mode == MODE_END) {
 			// TODO: make an end screen

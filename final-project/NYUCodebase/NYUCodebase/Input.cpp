@@ -20,4 +20,19 @@ Input::Input() {
 	}
 	// Poll for pressed keys.
 	const Uint8* keys = SDL_GetKeyboardState(NULL);
+	if (keys[SDL_SCANCODE_DOWN]) {
+		PlayerDirection = DOWN;
+	}
+	else if (keys[SDL_SCANCODE_LEFT]) {
+		PlayerDirection = LEFT;
+	}
+	else if (keys[SDL_SCANCODE_UP]) {
+		PlayerDirection = UP;
+	}
+	else if (keys[SDL_SCANCODE_RIGHT]) {
+		PlayerDirection = RIGHT;
+	}
+	else {
+		PlayerDirection = NONE;
+	}
 }
