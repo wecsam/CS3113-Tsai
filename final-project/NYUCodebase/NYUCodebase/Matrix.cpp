@@ -1,6 +1,6 @@
 
 #include "Matrix.h"
-#include <math.h>
+#include <cmath>
 
 Matrix::Matrix() {
     Identity();
@@ -210,8 +210,8 @@ void Matrix::SetOrthoProjection(float left, float right, float bottom, float top
 }
 
 void Matrix::SetPerspectiveProjection(float fov, float aspect, float zNear, float zFar) {
-    m[0][0] = 1.0f/tanf(fov/2.0)/aspect;
-    m[1][1] = 1.0f/tanf(fov/2.0);
+    m[0][0] = 1.0f/tanf(fov/2.0f)/aspect;
+    m[1][1] = 1.0f/tanf(fov/2.0f);
     m[2][2] = (zFar+zNear)/(zNear-zFar);
     m[3][2] = (2.0f*zFar*zNear)/(zNear-zFar);
     m[2][3] = -1.0f;
