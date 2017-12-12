@@ -79,6 +79,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="ShaderProgram.cpp" />
+    <ClCompile Include="Tile.cpp" />
     <ClCompile Include="TileFile.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -86,6 +87,7 @@
     <ClInclude Include="Rectangle.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="ShaderProgram.h" />
+    <ClInclude Include="Tile.h" />
     <ClInclude Include="TileFile.h" />
   </ItemGroup>
   <ItemGroup>
