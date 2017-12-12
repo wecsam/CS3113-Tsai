@@ -8,6 +8,8 @@ background_color=0,0,0,255
 
 [tilesets]
 tileset=Images/Prototype_31x6.png,256,299,0,0
+tileset=Images/Betty.png,48,48,0,0
+tileset=Images/George.png,48,48,0,0
 
 [layer]
 type=Floor
@@ -95,7 +97,7 @@ DoorY=18
 
 [Entities]
 type=Switch
-location=10,16,1,2
+location=11,17,1,2
 DoorX=7
 DoorY=13
 
@@ -104,4 +106,14 @@ type=Switch
 location=1,2,1,2
 DoorX=6
 DoorY=3
+
+[Entities]
+# Start
+type=Player
+location=15,30,0,0
+
+[Entities]
+# Helper
+type=AI
+location=9,13,0,0
 

@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" tiledversion="2017.10.31" orientation="isometric" renderorder="right-up" width="17" height="32" tilewidth="256" tileheight="149" infinite="0" nextobjectid="9">
+<map version="1.0" tiledversion="2017.10.31" orientation="isometric" renderorder="right-up" width="17" height="32" tilewidth="256" tileheight="149" infinite="0" nextobjectid="13">
  <tileset firstgid="1" name="Prototype" tilewidth="256" tileheight="299" tilecount="186" columns="31">
   <image source="Images/Prototype_31x6.png" width="7936" height="1794"/>
+ </tileset>
+ <tileset firstgid="187" name="Betty" tilewidth="48" tileheight="48" tilecount="16" columns="4">
+  <image source="Images/Betty.png" width="192" height="192"/>
+ </tileset>
+ <tileset firstgid="203" name="George" tilewidth="48" tileheight="48" tilecount="16" columns="4">
+  <image source="Images/George.png" width="192" height="192"/>
  </tileset>
  <layer name="Floor" width="17" height="32" offsetx="157.576" offsety="709.091">
   <data encoding="csv">
@@ -100,5 +106,7 @@
     <property name="DoorY" type="int" value="3"/>
    </properties>
   </object>
+  <object id="9" name="Start" type="Player" gid="187" x="2324" y="4560" width="48" height="48"/>
+  <object id="11" name="Helper" type="AI" gid="203" x="1436" y="2030" width="48" height="48"/>
  </objectgroup>
 </map>
