@@ -86,24 +86,28 @@
    <properties>
     <property name="DoorX" type="int" value="13"/>
     <property name="DoorY" type="int" value="25"/>
+    <property name="FacingLeft" type="bool" value="false"/>
    </properties>
   </object>
   <object id="6" type="Switch" gid="160" x="745.498" y="2831.5" width="256" height="299">
    <properties>
     <property name="DoorX" type="int" value="7"/>
     <property name="DoorY" type="int" value="18"/>
+    <property name="FacingLeft" type="bool" value="false"/>
    </properties>
   </object>
   <object id="7" type="Switch" gid="158" x="1639" y="2533" width="256" height="299">
    <properties>
     <property name="DoorX" type="int" value="7"/>
     <property name="DoorY" type="int" value="13"/>
+    <property name="FacingLeft" type="bool" value="true"/>
    </properties>
   </object>
   <object id="8" type="Switch" gid="158" x="297.996" y="298.003" width="256" height="299">
    <properties>
     <property name="DoorX" type="int" value="6"/>
     <property name="DoorY" type="int" value="3"/>
+    <property name="FacingLeft" type="bool" value="true"/>
    </properties>
   </object>
   <object id="9" name="Start" type="Player" gid="187" x="2324" y="4560" width="48" height="48"/>

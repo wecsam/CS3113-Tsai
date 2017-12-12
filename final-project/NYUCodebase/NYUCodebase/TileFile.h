@@ -11,8 +11,9 @@ public:
 		const std::string line;
 	};
 	struct Entity {
-		Entity(int Row, int Column, int DoorX, int DoorY);
+		Entity(int Row, int Column, int DoorX, int DoorY, bool FacingLeft);
 		int Row, Column, DoorX, DoorY;
+		bool FacingLeft;
 	};
 	typedef std::string LayerName;
 	typedef std::unordered_map<LayerName, int**> Layers;
@@ -59,6 +60,7 @@ private:
 		std::string type;
 		std::string location;
 		int doorX, doorY;
+		bool facingLeft;
 	};
 	// Data about the map
 	unsigned int mapWidth = 0;

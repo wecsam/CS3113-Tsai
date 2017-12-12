@@ -88,24 +88,28 @@ type=Switch
 location=9,30,1,2
 DoorX=13
 DoorY=25
+FacingLeft=false
 
 [Entities]
 type=Switch
 location=5,19,1,2
 DoorX=7
 DoorY=18
+FacingLeft=false
 
 [Entities]
 type=Switch
 location=11,17,1,2
 DoorX=7
 DoorY=13
+FacingLeft=true
 
 [Entities]
 type=Switch
 location=1,2,1,2
 DoorX=6
 DoorY=3
+FacingLeft=true
 
 [Entities]
 # Start

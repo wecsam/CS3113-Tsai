@@ -14,8 +14,8 @@ using std::strtol;
 using std::unordered_map;
 TileFile::ParseError::ParseError(const char* message, const std::string& line)
 	: message(message), line(line) {}
-TileFile::Entity::Entity(int Row, int Column, int DoorX, int DoorY)
-	: Row(Row), Column(Column), DoorX(DoorX), DoorY(DoorY) {}
+TileFile::Entity::Entity(int Row, int Column, int DoorX, int DoorY, bool FacingLeft)
+	: Row(Row), Column(Column), DoorX(DoorX), DoorY(DoorY), FacingLeft(FacingLeft) {}
 TileFile::TileFile() {}
 TileFile::TileFile(istream& tileFile) {
 	// Create a map of handlers for each line in each section in the file.
@@ -195,6 +195,7 @@ void TileFile::TileFileEntities::SectionStart(TileFile*) {
 	location.clear();
 	doorX = -1;
 	doorY = -1;
+	facingLeft = false;
 }
 void TileFile::TileFileEntities::Data(TileFile*, const std::string& key, const std::string& value) {
 	if (key == "type") {
@@ -208,6 +209,17 @@ void TileFile::TileFileEntities::Data(TileFile*, const std::string& key, const s
 	}
 	else if (key == "DoorY") {
 		doorY = strtol(value.c_str(), nullptr, 10);
+	}
+	else if (key == "FacingLeft") {
+		if (value == "true") {
+			facingLeft = true;
+		}
+		else if (value == "false") {
+			facingLeft = false;
+		}
+		else {
+			throw ParseError("Invalid value for FacingLeft:", value);
+		}
 	}
 	else {
 		throw ParseError("Unknown key in Entities:", key);
@@ -235,7 +247,7 @@ void TileFile::TileFileEntities::SectionEnd(TileFile* parent) {
 	}
 	parent->entities[type].emplace_back(
 		strtol(row.c_str(), nullptr, 10), strtol(column.c_str(), nullptr, 10),
-		doorX, doorY
+		doorX, doorY, facingLeft
 	);
 }
 void TileFile::CopyLayers(const TileFile::Layers& other) {
