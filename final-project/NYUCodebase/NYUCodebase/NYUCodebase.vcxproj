@@ -75,6 +75,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Input.cpp" />
     <ClCompile Include="Rectangle.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Matrix.cpp" />
@@ -84,6 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dimensions.h" />
+    <ClInclude Include="Input.h" />
     <ClInclude Include="Rectangle.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="ShaderProgram.h" />
