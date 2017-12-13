@@ -311,9 +311,18 @@ int main(int argc, char *argv[]) {
 			Tile* playerAdvancingToNextLevel = nullptr;
 			enum RockStatus { ROCK_SITTING, ROCK_FOLLOWING_PLAYER, ROCK_FLYING, ROCK_HIT_SWITCH, ROCK_DONE } rockStatus = ROCK_SITTING;
 			Switch* rockTarget = nullptr;
+			Uint32 screenShakeFinishTime = 0;
 			while (mode == MODE_PLAY) {
 				// Set the view matrix so that the view is centered on the player.
-				view.SetPosition(-player.GetCenterX(), -player.GetCenterY(), 0.0f);
+				{
+					Uint32 now = SDL_GetTicks();
+					float d = 0.0f;
+					if (now < screenShakeFinishTime) {
+						d = (screenShakeFinishTime - now) / 1000.0f;
+						d = 0.2f * (1 - d) * sin(100.0f * d);
+					}
+					view.SetPosition(-player.GetCenterX() + d, -player.GetCenterY() + d, 0.0f);
+				}
 				// Process input.
 				Uint32 ms = MillisecondsElapsed();
 				Input input;
@@ -335,6 +344,8 @@ int main(int argc, char *argv[]) {
 						// The player has reached the next level.
 						dy = playerAdvancingTargetY - theTile->GetCenterY();
 						playerAdvancingToNextLevel = nullptr;
+						// Shake the screen.
+						screenShakeFinishTime = SDL_GetTicks() + 150;
 					}
 					else {
 						// Make the player rise.
@@ -429,6 +440,7 @@ int main(int argc, char *argv[]) {
 					break;
 				case ROCK_HIT_SWITCH:
 					rockTarget->Flip();
+					screenShakeFinishTime = SDL_GetTicks() + 200;
 					rockStatus = ROCK_DONE;
 					break;
 				}
@@ -453,6 +465,8 @@ int main(int argc, char *argv[]) {
 							// The player should rise 4 spaces. Set the destination.
 							playerAdvancingTargetY = tile.GetCenterY() + TILE_TEXTURE_HEIGHT * 4.0f;
 							tile.SetType(TILE_TYPE_LEVEL_START);
+							// Shake the screen.
+							screenShakeFinishTime = SDL_GetTicks() + 50;
 						}
 					}
 					// Draw the tile.
