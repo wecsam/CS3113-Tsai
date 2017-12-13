@@ -153,108 +153,44 @@ int main(int argc, char *argv[]) {
 		cerr << "Unable to parse level data!\n" << e.message << '\n' << e.line << '\n';
 		return 2;
 	}
-	// The helper will interact with these objects.
-	Tile* helperDoor = nullptr;
-	Switch* helperSwitch = nullptr;
-	// Process the Switches.
-	vector<Switch*> switches;
-	{
-		auto switchEntities = tileFile.GetEntities().find("Switch");
-		if (switchEntities != tileFile.GetEntities().end()) {
-			for (const auto& entity : switchEntities->second) {
-				Switch* newSwitch = new Switch((float)entity.Row, (float)entity.Column, entity.DoorX, entity.DoorY, entity.FacingLeft);
-				switches.push_back(newSwitch);
-				if (entity.Row == 19 && entity.Column == 5) {
-					helperSwitch = newSwitch;
-				}
-			}
-		}
+	auto tilesFloorTypes = tileFile.GetLayers().find("Floor");
+	if (tilesFloorTypes == tileFile.GetLayers().end()) {
+		cerr << "The Floor layer is missing.\n";
+		return 3;
 	}
-	// Process the Floor and Walls layers.
-	vector<Tile*> tilesFloor;
-	vector<Tile*> tilesWalls;
-	vector<Tile> tilesDoorZCovers;
-	{
-		auto tilesFloorTypes = tileFile.GetLayers().find("Floor");
-		if (tilesFloorTypes == tileFile.GetLayers().end()) {
-			cerr << "The Floor layer is missing.\n";
-			return 3;
-		}
-		auto tilesWallsTypes = tileFile.GetLayers().find("Walls");
-		if (tilesWallsTypes == tileFile.GetLayers().end()) {
-			cerr << "The Walls layer is missing.\n";
-			return 4;
-		}
-		// The two layers have the same dimensions, so we can take care of both with one loop.
-		for (size_t i = 0; i < tileFile.GetMapHeight(); ++i) {
-			for (size_t j = 0; j < tileFile.GetMapWidth(); ++j) {
-				// Add a floor tile.
-				if (tilesFloorTypes->second[i][j] > 0) {
-					tilesFloor.push_back(new Tile((float)i, (float)j, tilesFloorTypes->second[i][j]));
-				}
-				// Add a wall tile.
-				if (tilesWallsTypes->second[i][j] > 0) {
-					Tile* newTile = new Tile((float)i, (float)j, tilesWallsTypes->second[i][j]);
-					tilesWalls.push_back(newTile);
-					// Check whether this is a door.
-					if (newTile->IsDoor()) {
-						// Check whether there is a switch that controls this wall.
-						// We could create a map of coordinates, but there are not that many switches anyway.
-						for (Switch* toggler : switches) {
-							if (toggler->GetDoorX() == j && toggler->GetDoorY() == i) {
-								auto test = newTile->GetType();
-								toggler->Door = newTile;
-								// Check whether this is the door for whose opening the helper is waiting.
-								if (j == 7 && i == 13) {
-									helperDoor = newTile;
-								}
-							}
-						}
-						// Add a Z cover for this door.
-						// The purpose of the Z cover is to cover the player as the player is passing through a doorway.
-						// Without the Z cover, the player would not look like the player was going through the doorway.
-						tilesDoorZCovers.emplace_back((float)i, (float)j, newTile->GetDoorZCover());
-					}
-				}
-			}
-		}
-	}
-	if (!helperDoor) {
-		cerr << "The helper's door was not found.\n";
-		return 5;
-	}
-	if (!helperSwitch) {
-		cerr << "The helper's switch was not found.\n";
-		return 6;
+	auto tilesWallsTypes = tileFile.GetLayers().find("Walls");
+	if (tilesWallsTypes == tileFile.GetLayers().end()) {
+		cerr << "The Walls layer is missing.\n";
+		return 4;
 	}
 	// Find the starting locations of the player and the helper AI.
 	auto playerStart = tileFile.GetEntities().find("Player");
 	if (playerStart == tileFile.GetEntities().end()) {
 		cerr << "The player's start location is missing.\n";
-		return 7;
+		return 5;
 	}
 	if (playerStart->second.size() != 1) {
 		cerr << "There must be exactly one starting location for the player.\n";
-		return 8;
+		return 6;
 	}
 	auto helperStart = tileFile.GetEntities().find("AI");
 	if (helperStart == tileFile.GetEntities().end()) {
 		cerr << "The helper AI's start location is missing.\n";
-		return 9;
+		return 7;
 	}
 	if (helperStart->second.size() != 1) {
 		cerr << "There must be exactly one starting location for the helper AI.\n";
-		return 10;
+		return 8;
 	}
 	// Find the location of the rock.
 	auto rockStart = tileFile.GetEntities().find("Rock");
 	if (rockStart == tileFile.GetEntities().end()) {
 		cerr << "The rock's start location is missing.\n";
-		return 11;
+		return 9;
 	}
 	if (rockStart->second.size() != 1) {
 		cerr << "There must be exactly one starting location for the rock.\n";
-		return 12;
+		return 10;
 	}
 	// Load textures.
 	auto Ttiles = LoadTexture(RESOURCE_FOLDER"Images/Prototype_31x6.png");
@@ -303,6 +239,61 @@ int main(int argc, char *argv[]) {
 		}
 		{
 			Matrix view;
+			// The helper will interact with these objects.
+			Tile* helperDoor = nullptr;
+			Switch* helperSwitch = nullptr;
+			// Process the Switches.
+			vector<Switch*> switches;
+			{
+				auto switchEntities = tileFile.GetEntities().find("Switch");
+				if (switchEntities != tileFile.GetEntities().end()) {
+					for (const auto& entity : switchEntities->second) {
+						Switch* newSwitch = new Switch((float)entity.Row, (float)entity.Column, entity.DoorX, entity.DoorY, entity.FacingLeft);
+						switches.push_back(newSwitch);
+						if (entity.Row == 19 && entity.Column == 5) {
+							helperSwitch = newSwitch;
+						}
+					}
+				}
+			}
+			// Process the Floor and Walls layers.
+			vector<Tile*> tilesFloor;
+			vector<Tile*> tilesWalls;
+			vector<Tile> tilesDoorZCovers;
+			// The two layers have the same dimensions, so we can take care of both with one loop.
+			for (size_t i = 0; i < tileFile.GetMapHeight(); ++i) {
+				for (size_t j = 0; j < tileFile.GetMapWidth(); ++j) {
+					// Add a floor tile.
+					if (tilesFloorTypes->second[i][j] > 0) {
+						tilesFloor.push_back(new Tile((float)i, (float)j, tilesFloorTypes->second[i][j]));
+					}
+					// Add a wall tile.
+					if (tilesWallsTypes->second[i][j] > 0) {
+						Tile* newTile = new Tile((float)i, (float)j, tilesWallsTypes->second[i][j]);
+						tilesWalls.push_back(newTile);
+						// Check whether this is a door.
+						if (newTile->IsDoor()) {
+							// Check whether there is a switch that controls this wall.
+							// We could create a map of coordinates, but there are not that many switches anyway.
+							for (Switch* toggler : switches) {
+								if (toggler->GetDoorX() == j && toggler->GetDoorY() == i) {
+									auto test = newTile->GetType();
+									toggler->Door = newTile;
+									// Check whether this is the door for whose opening the helper is waiting.
+									if (j == 7 && i == 13) {
+										helperDoor = newTile;
+									}
+								}
+							}
+							// Add a Z cover for this door.
+							// The purpose of the Z cover is to cover the player as the player is passing through a doorway.
+							// Without the Z cover, the player would not look like the player was going through the doorway.
+							tilesDoorZCovers.emplace_back((float)i, (float)j, newTile->GetDoorZCover());
+						}
+					}
+				}
+			}
+			// Create the player, helper, and rock.
 			Character player(0.0f, 0.0f);
 			Character helper(ISOMETRIC_TO_SCREEN(helperStart->second.begin()->Row, helperStart->second.begin()->Column));
 			Rectangle rock(ISOMETRIC_TO_SCREEN(rockStart->second.begin()->Row, rockStart->second.begin()->Column), 0.125f, 0.125f, 0.0f, 0.0f, 1.0f, 1.0f);
@@ -374,7 +365,7 @@ int main(int argc, char *argv[]) {
 					MoveCharacter(player, input.PlayerDirection, ms);
 				}
 				// Make the helper move.
-				if (helperDoor->IsOpenDoor() && !helperSwitch->IsOn()) {
+				if (helperDoor && helperSwitch && helperDoor->IsOpenDoor() && !helperSwitch->IsOn()) {
 					Input::Direction helperDirection = Input::NONE;
 					if (helper.GetCenterX() >= ISOMETRIC_TO_SCREEN_X(14, 4)) {
 						if (helper.GetCenterY() < ISOMETRIC_TO_SCREEN_Y(12, 9)) {
@@ -556,6 +547,15 @@ int main(int argc, char *argv[]) {
 				// Update screen.
 				SDL_GL_SwapWindow(displayWindow);
 			}
+			for (Tile* tile : tilesFloor) {
+				delete tile;
+			}
+			for (Tile* tile : tilesWalls) {
+				delete tile;
+			}
+			for (Switch* toggler : switches) {
+				delete toggler;
+			}
 		}
 		if (mode == MODE_END) {
 			Rectangle endScreen(0.0f, 0.0f, ORTHO_X_BOUND, ORTHO_Y_BOUND, 0.0f, 0.0f, 1.0f, 1.0f);
@@ -575,15 +575,6 @@ int main(int argc, char *argv[]) {
 				}
 			}
 		}
-	}
-	for (Tile* tile : tilesFloor) {
-		delete tile;
-	}
-	for (Tile* tile : tilesWalls) {
-		delete tile;
-	}
-	for (Switch* toggler : switches) {
-		delete toggler;
 	}
 	delete program;
 	SDL_Quit();
