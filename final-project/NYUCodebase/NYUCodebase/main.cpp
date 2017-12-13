@@ -77,6 +77,9 @@ void DrawTrianglesWithTexture(const Matrix& ModelviewMatrix, GLsizei numTriangle
 	glDisableVertexAttribArray(program->positionAttribute);
 	glDisableVertexAttribArray(program->texCoordAttribute);
 }
+void DrawRectangleWithTexture(const Rectangle& r, const Matrix& view, GLuint textureID) {
+	DrawTrianglesWithTexture(r.Model * view, 2, r.GetVertices(), r.GetTextureCoordinates(), textureID);
+}
 void MoveCharacter(Character& c, Input::Direction d, Uint32 ms) {
 	switch (d) {
 	case Input::DOWN:
@@ -303,7 +306,7 @@ int main(int argc, char *argv[]) {
 				glClear(GL_COLOR_BUFFER_BIT);
 				// Draw the floor.
 				for (const auto& tile : tilesFloor) {
-					DrawTrianglesWithTexture(tile.Model * view, 2, tile.GetVertices(), tile.GetTextureCoordinates(), Ttiles);
+					DrawRectangleWithTexture(tile, view, Ttiles);
 				}
 				// Draw walls above the player or helper, draw the player or helper, draw the walls between the
 				// player and helper, draw the other character, and then draw walls below that character.
@@ -348,7 +351,7 @@ int main(int argc, char *argv[]) {
 					drawList.sort(RectangleAndTextureID<float>::GreaterThan);
 					// Draw the rectangles.
 					for (const auto& r : drawList) {
-						DrawTrianglesWithTexture(r.Rectangle->Model * view, 2, r.Rectangle->GetVertices(), r.Rectangle->GetTextureCoordinates(), r.TextureID);
+						DrawRectangleWithTexture(*r.Rectangle, view, r.TextureID);
 					}
 				}
 				playerLastX = player.GetCenterX();
