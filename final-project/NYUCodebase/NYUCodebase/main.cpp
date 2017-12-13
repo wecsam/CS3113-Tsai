@@ -10,6 +10,7 @@
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include <SDL_image.h>
+#include <SDL_mixer.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "Character.h"
@@ -183,6 +184,7 @@ int main(int argc, char *argv[]) {
 	glClearColor(0.0f, 0.3f, 0.6f, 1.0f);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 4096);
 	program = new ShaderProgram(RESOURCE_FOLDER"vertex_textured.glsl", RESOURCE_FOLDER"fragment_textured.glsl");
 	faderProgram = new ShaderProgram(RESOURCE_FOLDER"vertex_textured.glsl", RESOURCE_FOLDER"fragment_black_alpha.glsl");
 	Rectangle::SetBox(Fader::FADER_VERTICES, ORTHO_Y_BOUND, ORTHO_X_BOUND, -ORTHO_Y_BOUND, -ORTHO_X_BOUND);
@@ -248,6 +250,17 @@ int main(int argc, char *argv[]) {
 	auto Trock = LoadTexture(RESOURCE_FOLDER"Images/Rock.png");
 	auto Tstart = LoadTexture(RESOURCE_FOLDER"Images/Start.png");
 	auto Tend = LoadTexture(RESOURCE_FOLDER"Images/End.png");
+	// Load sounds.
+	auto Sdoor = Mix_LoadWAV(RESOURCE_FOLDER"Sounds/Door.wav");
+	auto Sland = Mix_LoadWAV(RESOURCE_FOLDER"Sounds/Land.wav");
+	auto Slaunch = Mix_LoadWAV(RESOURCE_FOLDER"Sounds/Launch.wav");
+	auto SrockGet = Mix_LoadWAV(RESOURCE_FOLDER"Sounds/Rock_Get.wav");
+	auto SrockThrow = Mix_LoadWAV(RESOURCE_FOLDER"Sounds/Rock_Throw.wav");
+	auto Sselect = Mix_LoadWAV(RESOURCE_FOLDER"Sounds/Select.wav");
+	auto Mbackground = Mix_LoadMUS(RESOURCE_FOLDER"Sounds/Podington_Bear_-_Starling.wav");
+	// Start background music.
+	Mix_VolumeMusic(MIX_MAX_VOLUME / 2);
+	Mix_PlayMusic(Mbackground, -1);
 	// Start the game.
 	GameMode mode = MODE_START, nextMode;
 	bool modeWaitingForFade = false;
@@ -265,9 +278,15 @@ int main(int argc, char *argv[]) {
 					mode = MODE_QUIT;
 				}
 				else if (input.UpPressed) {
+					if (selectionOnQuit) {
+						Mix_PlayChannel(-1, Sselect, 0);
+					}
 					selectionOnQuit = false;
 				}
 				else if (input.DownPressed) {
+					if (!selectionOnQuit) {
+						Mix_PlayChannel(-1, Sselect, 0);
+					}
 					selectionOnQuit = true;
 				}
 				else if (input.EnterPressed) {
@@ -407,6 +426,7 @@ int main(int argc, char *argv[]) {
 						// The player has reached the next level.
 						dy = playerAdvancingTargetY - theTile->GetCenterY();
 						playerAdvancingToNextLevel = nullptr;
+						Mix_PlayChannel(-1, Sland, 0);
 						// Shake the screen.
 						screenShakeFinishTime = SDL_GetTicks() + 150;
 					}
@@ -422,6 +442,7 @@ int main(int argc, char *argv[]) {
 					if (input.SpacePressed) {
 						if (playerNearSwitch) {
 							playerNearSwitch->Flip();
+							Mix_PlayChannel(-1, Sdoor, 0);
 						}
 						// Note: the rock can also flip the switch. See below.
 					}
@@ -449,6 +470,7 @@ int main(int argc, char *argv[]) {
 					else {
 						helperSwitch->Flip();
 						helperDirection = Input::DOWN;
+						Mix_PlayChannel(-1, Sdoor, 0);
 					}
 					MoveCharacter(helper, helperDirection, ms);
 				}
@@ -460,6 +482,7 @@ int main(int argc, char *argv[]) {
 					if (square(rock.GetCenterX() - player.GetCenterX()) + square(rock.GetCenterY() - player.GetCenterY()) < 0.125f) {
 						// The player touched the rock. Make the rock follow the player.
 						rockStatus = ROCK_FOLLOWING_PLAYER;
+						Mix_PlayChannel(-1, SrockGet, 0);
 					}
 					break;
 				case ROCK_FOLLOWING_PLAYER:
@@ -481,6 +504,7 @@ int main(int argc, char *argv[]) {
 						if (target) {
 							rockTarget = target;
 							rockStatus = ROCK_FLYING;
+							Mix_PlayChannel(-1, SrockThrow, 0);
 						}
 					}
 					break;
@@ -503,6 +527,7 @@ int main(int argc, char *argv[]) {
 					break;
 				case ROCK_HIT_SWITCH:
 					rockTarget->Flip();
+					Mix_PlayChannel(-1, Sdoor, 0);
 					screenShakeFinishTime = SDL_GetTicks() + 200;
 					rockStatus = ROCK_DONE;
 					break;
@@ -531,6 +556,8 @@ int main(int argc, char *argv[]) {
 							tile->SetType(TILE_TYPE_LEVEL_START);
 							// Shake the screen.
 							screenShakeFinishTime = SDL_GetTicks() + 500;
+							// Play a sound effect.
+							Mix_PlayChannel(-1, Slaunch, 0);
 						}
 						playerIsOnTheFloor = true;
 					}
@@ -657,6 +684,13 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	}
+	Mix_FreeChunk(Sdoor);
+	Mix_FreeChunk(Sland);
+	Mix_FreeChunk(Slaunch);
+	Mix_FreeChunk(SrockGet);
+	Mix_FreeChunk(SrockThrow);
+	Mix_FreeChunk(Sselect);
+	Mix_FreeMusic(Mbackground);
 	delete program;
 	delete faderProgram;
 	SDL_Quit();
