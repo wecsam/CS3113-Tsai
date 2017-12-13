@@ -294,8 +294,8 @@ int main(int argc, char *argv[]) {
 				// Clear screen.
 				glClear(GL_COLOR_BUFFER_BIT);
 				// Draw.
-				DrawTrianglesWithTexture(startScreen.Model, 2, startScreen.GetVertices(), startScreen.GetTextureCoordinates(), Tstart);
-				DrawTrianglesWithTexture(marker.Model, 2, marker.GetVertices(), marker.GetTextureCoordinates(), Tbetty);
+				DrawRectangleWithTexture(startScreen, IDENTITY, Tstart);
+				DrawRectangleWithTexture(marker, IDENTITY, Tbetty);
 				// Update screen.
 				SDL_GL_SwapWindow(displayWindow);
 			}
