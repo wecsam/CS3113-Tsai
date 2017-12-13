@@ -23,6 +23,7 @@
 #include "TileFile.h"
 #define TILE_FILE "Levels.txt"
 #define PLAYER_VELOCITY 0.001f
+#define ROCK_VELOCITY 0.003f
 #define TILE_TYPE_LEVEL_COMPLETION 53
 #define TILE_TYPE_LEVEL_START 57
 #ifdef _WINDOWS
@@ -419,7 +420,7 @@ int main(int argc, char *argv[]) {
 						}
 						else {
 							float rockFlightAngle = atan2(distanceY, distanceX);
-							rock.Model.Translate(cos(rockFlightAngle) * PLAYER_VELOCITY * ms, sin(rockFlightAngle) * PLAYER_VELOCITY * ms, 0.0f);
+							rock.Model.Translate(cos(rockFlightAngle) * ROCK_VELOCITY * ms, sin(rockFlightAngle) * 2.0f * ROCK_VELOCITY * ms, 0.0f);
 						}
 					}
 					else {
