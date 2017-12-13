@@ -77,6 +77,32 @@ void DrawTrianglesWithTexture(const Matrix& ModelviewMatrix, GLsizei numTriangle
 	glDisableVertexAttribArray(program->positionAttribute);
 	glDisableVertexAttribArray(program->texCoordAttribute);
 }
+void MoveCharacter(Character& c, Input::Direction d, Uint32 ms) {
+	switch (d) {
+	case Input::DOWN:
+		c.Model.Translate(0.0f, ms * -PLAYER_VELOCITY, 0.0f);
+		c.Face(Character::DOWN);
+		c.Walk();
+		break;
+	case Input::LEFT:
+		c.Model.Translate(ms * -PLAYER_VELOCITY, 0.0f, 0.0f);
+		c.Face(Character::LEFT);
+		c.Walk();
+		break;
+	case Input::UP:
+		c.Model.Translate(0.0f, ms * PLAYER_VELOCITY, 0.0f);
+		c.Face(Character::UP);
+		c.Walk();
+		break;
+	case Input::RIGHT:
+		c.Model.Translate(ms * PLAYER_VELOCITY, 0.0f, 0.0f);
+		c.Face(Character::RIGHT);
+		c.Walk();
+		break;
+	default:
+		c.Stand();
+	}
+}
 template<typename CompareType>
 struct RectangleAndTextureID {
 	RectangleAndTextureID(const Rectangle* Rectangle, unsigned int TextureID, CompareType Comparee)
@@ -117,13 +143,20 @@ int main(int argc, char *argv[]) {
 		cerr << "Unable to parse level data!\n" << e.message << '\n' << e.line << '\n';
 		return 2;
 	}
+	// The helper will interact with these objects.
+	Tile* helperDoor = nullptr;
+	Switch* helperSwitch = nullptr;
 	// Process the Switches.
-	vector<Switch> switches;
+	vector<Switch*> switches;
 	{
 		auto switchEntities = tileFile.GetEntities().find("Switch");
 		if (switchEntities != tileFile.GetEntities().end()) {
 			for (const auto& entity : switchEntities->second) {
-				switches.emplace_back((float)entity.Row, (float)entity.Column, entity.DoorX, entity.DoorY, entity.FacingLeft);
+				Switch* newSwitch = new Switch((float)entity.Row, (float)entity.Column, entity.DoorX, entity.DoorY, entity.FacingLeft);
+				switches.push_back(newSwitch);
+				if (entity.Row == 19 && entity.Column == 5) {
+					helperSwitch = newSwitch;
+				}
 			}
 		}
 	}
@@ -157,10 +190,14 @@ int main(int argc, char *argv[]) {
 					if (newTile->IsDoor()) {
 						// Check whether there is a switch that controls this wall.
 						// We could create a map of coordinates, but there are not that many switches anyway.
-						for (auto& toggler : switches) {
-							if (toggler.GetDoorX() == j && toggler.GetDoorY() == i) {
+						for (Switch* toggler : switches) {
+							if (toggler->GetDoorX() == j && toggler->GetDoorY() == i) {
 								auto test = newTile->GetType();
-								toggler.Door = newTile;
+								toggler->Door = newTile;
+								// Check whether this is the door for whose opening the helper is waiting.
+								if (j == 7 && i == 13) {
+									helperDoor = newTile;
+								}
 							}
 						}
 						// Add a Z cover for this door.
@@ -172,24 +209,32 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	}
+	if (!helperDoor) {
+		cerr << "The helper's door was not found.\n";
+		return 5;
+	}
+	if (!helperSwitch) {
+		cerr << "The helper's switch was not found.\n";
+		return 6;
+	}
 	// Find the starting locations of the player and the helper AI.
 	auto playerStart = tileFile.GetEntities().find("Player");
 	if (playerStart == tileFile.GetEntities().end()) {
 		cerr << "The player's start location is missing.\n";
-		return 5;
+		return 7;
 	}
 	if (playerStart->second.size() != 1) {
 		cerr << "There must be exactly one starting location for the player.\n";
-		return 6;
+		return 8;
 	}
 	auto helperStart = tileFile.GetEntities().find("AI");
 	if (helperStart == tileFile.GetEntities().end()) {
 		cerr << "The helper AI's start location is missing.\n";
-		return 5;
+		return 9;
 	}
 	if (helperStart->second.size() != 1) {
 		cerr << "There must be exactly one starting location for the helper AI.\n";
-		return 6;
+		return 10;
 	}
 	// Load textures.
 	auto Ttiles = LoadTexture(RESOURCE_FOLDER"Images/Prototype_31x6.png");
@@ -212,7 +257,7 @@ int main(int argc, char *argv[]) {
 				// Set the view matrix so that the view is centered on the player.
 				view.SetPosition(-player.GetCenterX(), -player.GetCenterY(), 0.0f);
 				// Process input.
-				auto ms = MillisecondsElapsed();
+				Uint32 ms = MillisecondsElapsed();
 				Input input;
 				if (input.QuitRequested) {
 					mode = MODE_QUIT;
@@ -226,29 +271,31 @@ int main(int argc, char *argv[]) {
 						playerNearSwitch->Flip();
 					}
 				}
-				switch (input.PlayerDirection) {
-				case Input::DOWN:
-					player.Model.Translate(0.0f, ms * -PLAYER_VELOCITY, 0.0f);
-					player.Face(Character::DOWN);
-					player.Walk();
-					break;
-				case Input::LEFT:
-					player.Model.Translate(ms * -PLAYER_VELOCITY, 0.0f, 0.0f);
-					player.Face(Character::LEFT);
-					player.Walk();
-					break;
-				case Input::UP:
-					player.Model.Translate(0.0f, ms * PLAYER_VELOCITY, 0.0f);
-					player.Face(Character::UP);
-					player.Walk();
-					break;
-				case Input::RIGHT:
-					player.Model.Translate(ms * PLAYER_VELOCITY, 0.0f, 0.0f);
-					player.Face(Character::RIGHT);
-					player.Walk();
-					break;
-				default:
-					player.Stand();
+				MoveCharacter(player, input.PlayerDirection, ms);
+				// Make the helper move.
+				if (helperDoor->IsOpenDoor() && !helperSwitch->IsOn()) {
+					Input::Direction helperDirection = Input::NONE;
+					if (helper.GetCenterX() >= ISOMETRIC_TO_SCREEN_X(14, 4)) {
+						if (helper.GetCenterY() < ISOMETRIC_TO_SCREEN_Y(12, 9)) {
+							helperDirection = Input::UP;
+						}
+						else {
+							helperDirection = Input::LEFT;
+						}
+					}
+					else if (helper.GetCenterX() >= ISOMETRIC_TO_SCREEN_X(17, 3)) {
+						if (helper.GetCenterY() > ISOMETRIC_TO_SCREEN_Y(16, 7)) {
+							helperDirection = Input::DOWN;
+						}
+						else {
+							helperDirection = Input::LEFT;
+						}
+					}
+					else {
+						helperSwitch->Flip();
+						helperDirection = Input::DOWN;
+					}
+					MoveCharacter(helper, helperDirection, ms);
 				}
 				// Create a line segment from the player's last position to the player's current position.
 				LineSegment playerPath(playerLastX, playerLastY - PLAYER_FEET_OFFSET_Y, player.GetCenterX(), player.GetCenterY() - PLAYER_FEET_OFFSET_Y);
@@ -285,13 +332,13 @@ int main(int argc, char *argv[]) {
 					// Add all switches to the draw list.
 					// Also, check whether the player is near a switch.
 					playerNearSwitch = nullptr;
-					for (auto& toggler : switches) {
-						drawList.emplace_back(&toggler, Ttiles, toggler.GetCenterY() - TILE_TEXTURE_HEIGHT * 0.126f);
+					for (Switch* toggler : switches) {
+						drawList.emplace_back(toggler, Ttiles, toggler->GetCenterY() - TILE_TEXTURE_HEIGHT * 0.126f);
 						if (
-							toggler.GetLeftBoxBound() <= player.GetCenterX() && player.GetCenterX() <= toggler.GetRightBoxBound() &&
-							toggler.GetBottomBoxBound() <= player.GetCenterY() && player.GetCenterY() <= toggler.GetTopBoxBound()
+							toggler->GetLeftBoxBound() <= player.GetCenterX() && player.GetCenterX() <= toggler->GetRightBoxBound() &&
+							toggler->GetBottomBoxBound() <= player.GetCenterY() && player.GetCenterY() <= toggler->GetTopBoxBound()
 						) {
-							playerNearSwitch = &toggler;
+							playerNearSwitch = toggler;
 						}
 					}
 					// Add characters to the other list.
@@ -317,6 +364,9 @@ int main(int argc, char *argv[]) {
 	}
 	for (Tile* tile : tilesWalls) {
 		delete tile;
+	}
+	for (Switch* toggler : switches) {
+		delete toggler;
 	}
 	delete program;
 	SDL_Quit();
