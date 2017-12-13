@@ -129,6 +129,7 @@ int main(int argc, char *argv[]) {
 	// Process the Floor and Walls layers.
 	vector<Tile> tilesFloor;
 	vector<Tile*> tilesWalls;
+	vector<Tile> tilesDoorZCovers;
 	{
 		auto tilesFloorTypes = tileFile.GetLayers().find("Floor");
 		if (tilesFloorTypes == tileFile.GetLayers().end()) {
@@ -161,6 +162,10 @@ int main(int argc, char *argv[]) {
 								toggler.Door = newTile;
 							}
 						}
+						// Add a Z cover for this door.
+						// The purpose of the Z cover is to cover the player as the player is passing through a doorway.
+						// Without the Z cover, the player would not look like the player was going through the doorway.
+						tilesDoorZCovers.emplace_back((float)i, (float)j, newTile->GetDoorZCover());
 					}
 				}
 			}
@@ -257,6 +262,10 @@ int main(int argc, char *argv[]) {
 					for (const Tile* tile : tilesWalls) {
 						// TODO: use the diagonal edge of the wall instead of a flat Y value
 						drawList.emplace_back(tile, Ttiles, tile->GetCenterY() - TILE_TEXTURE_HEIGHT * 0.125f);
+					}
+					// Add all door Z covers to the draw list.
+					for (const auto& cover : tilesDoorZCovers) {
+						drawList.emplace_back(&cover, Ttiles, cover.GetCenterY() - TILE_TEXTURE_HEIGHT * 0.5f);
 					}
 					// Add all switches to the draw list.
 					// Also, check whether the player is near a switch.
