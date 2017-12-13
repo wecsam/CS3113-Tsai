@@ -209,6 +209,8 @@ int main(int argc, char *argv[]) {
 			float playerLastX = player.GetCenterX(), playerLastY = player.GetCenterY();
 			Switch* playerNearSwitch = nullptr;
 			while (mode == MODE_PLAY) {
+				// Set the view matrix so that the view is centered on the player.
+				view.SetPosition(-player.GetCenterX(), -player.GetCenterY(), 0.0f);
 				// Process input.
 				auto ms = MillisecondsElapsed();
 				Input input;
@@ -252,8 +254,6 @@ int main(int argc, char *argv[]) {
 				LineSegment playerPath(playerLastX, playerLastY - PLAYER_FEET_OFFSET_Y, player.GetCenterX(), player.GetCenterY() - PLAYER_FEET_OFFSET_Y);
 				// Clear screen.
 				glClear(GL_COLOR_BUFFER_BIT);
-				// Set the view matrix so that the view is centered on the player.
-				view.SetPosition(-player.GetCenterX(), -player.GetCenterY(), 0.0f);
 				// Draw the floor.
 				for (const auto& tile : tilesFloor) {
 					DrawTrianglesWithTexture(tile.Model * view, 2, tile.GetVertices(), tile.GetTextureCoordinates(), Ttiles);
