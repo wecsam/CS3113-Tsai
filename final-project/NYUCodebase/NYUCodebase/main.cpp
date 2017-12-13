@@ -15,6 +15,7 @@
 #include "Character.h"
 #include "Dimensions.h"
 #include "Input.h"
+#include "LineSegment.h"
 #include "Matrix.h"
 #include "ShaderProgram.h"
 #include "Switch.h"
@@ -205,6 +206,7 @@ int main(int argc, char *argv[]) {
 			Matrix view;
 			Character player(ISOMETRIC_TO_SCREEN(playerStart->second.begin()->Row, playerStart->second.begin()->Column));
 			Character helper(ISOMETRIC_TO_SCREEN(helperStart->second.begin()->Row, helperStart->second.begin()->Column));
+			float playerLastX = player.GetCenterX(), playerLastY = player.GetCenterY();
 			Switch* playerNearSwitch = nullptr;
 			while (mode == MODE_PLAY) {
 				// Process input.
@@ -246,6 +248,8 @@ int main(int argc, char *argv[]) {
 				default:
 					player.Stand();
 				}
+				// Create a line segment from the player's last position to the player's current position.
+				LineSegment playerPath(playerLastX, playerLastY - PLAYER_FEET_OFFSET_Y, player.GetCenterX(), player.GetCenterY() - PLAYER_FEET_OFFSET_Y);
 				// Clear screen.
 				glClear(GL_COLOR_BUFFER_BIT);
 				// Set the view matrix so that the view is centered on the player.
@@ -262,6 +266,15 @@ int main(int argc, char *argv[]) {
 					for (const Tile* tile : tilesWalls) {
 						// TODO: use the diagonal edge of the wall instead of a flat Y value
 						drawList.emplace_back(tile, Ttiles, tile->GetCenterY() - TILE_TEXTURE_HEIGHT * 0.125f);
+						// Check for a collision between this wall and the player.
+						float intersectionX, intersectionY;
+						LineSegment wallBottomEdge;
+						if (tile->GetBottomEdge(wallBottomEdge)) {
+							if (playerPath.IntersectionWith(wallBottomEdge, intersectionX, intersectionY)) {
+								// The player collided!
+								player.Model.SetPosition(playerLastX, playerLastY, 0.0f);
+							}
+						}
 					}
 					// Add all door Z covers to the draw list.
 					for (const auto& cover : tilesDoorZCovers) {
@@ -289,6 +302,8 @@ int main(int argc, char *argv[]) {
 						DrawTrianglesWithTexture(r.Rectangle->Model * view, 2, r.Rectangle->GetVertices(), r.Rectangle->GetTextureCoordinates(), r.TextureID);
 					}
 				}
+				playerLastX = player.GetCenterX();
+				playerLastY = player.GetCenterY();
 				// Update screen.
 				SDL_GL_SwapWindow(displayWindow);
 			}

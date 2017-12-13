@@ -1,8 +1,6 @@
 #include "Character.h"
 #include <SDL.h>
 #define NUM_WALKING_FRAMES 4
-#define PLAYER_HALF_WIDTH 0.125f
-#define PLAYER_HALF_HEIGHT 0.125f
 Character::Character(float x, float y) : Rectangle(x, y, PLAYER_HALF_WIDTH, PLAYER_HALF_HEIGHT) {
 	Face(DOWN);
 	Stand();

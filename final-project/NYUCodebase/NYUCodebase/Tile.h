@@ -1,5 +1,6 @@
 #pragma once
 #include "Rectangle.h"
+#include "LineSegment.h"
 // The spacing from one tile to the next
 #define TILE_TEXTURE_WIDTH 1.0f
 #define TILE_TEXTURE_HEIGHT 0.58203125f
@@ -19,6 +20,7 @@ public:
 	typedef int TileType;
 	Tile(float row, float column, TileType type);
 	TileType GetType() const;
+	bool GetBottomEdge(LineSegment& result) const;
 	bool IsOpenDoor() const;
 	bool IsClosedDoor() const;
 	bool IsDoor() const;
