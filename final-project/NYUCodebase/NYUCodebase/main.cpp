@@ -261,6 +261,7 @@ int main(int argc, char *argv[]) {
 	auto Tgeorge = LoadTexture(RESOURCE_FOLDER"Images/George.png");
 	auto Trock = LoadTexture(RESOURCE_FOLDER"Images/Rock.png");
 	auto Tstart = LoadTexture(RESOURCE_FOLDER"Images/Start.png");
+	auto Tend = LoadTexture(RESOURCE_FOLDER"Images/End.png");
 	// Start the game.
 	GameMode mode = MODE_START;
 	while (mode != MODE_QUIT) {
@@ -519,9 +520,23 @@ int main(int argc, char *argv[]) {
 				SDL_GL_SwapWindow(displayWindow);
 			}
 		}
-		while (mode == MODE_END) {
-			// TODO: make an end screen
-			mode = MODE_QUIT;
+		if (mode == MODE_END) {
+			Rectangle endScreen(0.0f, 0.0f, ORTHO_X_BOUND, ORTHO_Y_BOUND, 0.0f, 0.0f, 1.0f, 1.0f);
+			// Draw once.
+			glClear(GL_COLOR_BUFFER_BIT);
+			DrawRectangleWithTexture(endScreen, IDENTITY, Tend);
+			SDL_GL_SwapWindow(displayWindow);
+			// Process input.
+			while (mode == MODE_END) {
+				Uint32 ms = MillisecondsElapsed();
+				Input input;
+				if (input.QuitRequested) {
+					mode = MODE_QUIT;
+				}
+				else if (input.SpacePressed || input.EnterPressed || input.EscapePressed) {
+					mode = MODE_START;
+				}
+			}
 		}
 	}
 	for (Tile* tile : tilesWalls) {
