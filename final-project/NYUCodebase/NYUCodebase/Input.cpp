@@ -11,11 +11,21 @@ Input::Input() {
 			break;
 		case SDL_KEYDOWN:
 			switch (event.key.keysym.scancode) {
+			case SDL_SCANCODE_DOWN:
+				DownPressed = true;
+				break;
+			case SDL_SCANCODE_RETURN:
+			case SDL_SCANCODE_RETURN2:
+				EnterPressed = true;
+				break;
 			case SDL_SCANCODE_ESCAPE:
 				EscapePressed = true;
 				break;
 			case SDL_SCANCODE_SPACE:
 				SpacePressed = true;
+				break;
+			case SDL_SCANCODE_UP:
+				UpPressed = true;
 				break;
 			}
 			break;

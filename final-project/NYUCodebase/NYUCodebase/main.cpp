@@ -35,6 +35,7 @@ using std::vector;
 enum GameMode {	MODE_QUIT, MODE_START, MODE_PLAY, MODE_END };
 SDL_Window* displayWindow;
 ShaderProgram* program;
+const Matrix IDENTITY;
 GLuint LoadTexture(const char *filePath) {
 	int w, h, comp;
 	unsigned char* image = stbi_load(filePath, &w, &h, &comp, STBI_rgb_alpha);
@@ -243,12 +244,44 @@ int main(int argc, char *argv[]) {
 	auto Ttiles = LoadTexture(RESOURCE_FOLDER"Images/Prototype_31x6.png");
 	auto Tbetty = LoadTexture(RESOURCE_FOLDER"Images/Betty.png");
 	auto Tgeorge = LoadTexture(RESOURCE_FOLDER"Images/George.png");
+	auto Tstart = LoadTexture(RESOURCE_FOLDER"Images/Start.png");
 	// Start the game.
 	GameMode mode = MODE_START;
 	while (mode != MODE_QUIT) {
-		while (mode == MODE_START) {
-			// TODO: make a start screen
-			mode = MODE_PLAY;
+		{
+			Rectangle startScreen(0.0f, 0.0f, ORTHO_X_BOUND, ORTHO_Y_BOUND, 0.0f, 0.0f, 1.0f, 1.0f);
+			Character marker(0.0f, 0.0f);
+			bool selectionOnQuit = false;
+			while (mode == MODE_START) {
+				// Process input.
+				Uint32 ms = MillisecondsElapsed();
+				Input input;
+				if (input.QuitRequested) {
+					mode = MODE_QUIT;
+				}
+				else if (input.UpPressed) {
+					selectionOnQuit = false;
+				}
+				else if (input.DownPressed) {
+					selectionOnQuit = true;
+				}
+				else if (input.EnterPressed) {
+					if (selectionOnQuit) {
+						mode = MODE_QUIT;
+					}
+					else {
+						mode = MODE_PLAY;
+					}
+				}
+				marker.Model.SetPosition(-1.75f, selectionOnQuit ? -0.6f : -0.1f, 0.0f);
+				// Clear screen.
+				glClear(GL_COLOR_BUFFER_BIT);
+				// Draw.
+				DrawTrianglesWithTexture(startScreen.Model, 2, startScreen.GetVertices(), startScreen.GetTextureCoordinates(), Tstart);
+				DrawTrianglesWithTexture(marker.Model, 2, marker.GetVertices(), marker.GetTextureCoordinates(), Tbetty);
+				// Update screen.
+				SDL_GL_SwapWindow(displayWindow);
+			}
 		}
 		{
 			Matrix view;
