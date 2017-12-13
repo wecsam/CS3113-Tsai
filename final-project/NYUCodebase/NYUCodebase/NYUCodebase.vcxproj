@@ -77,6 +77,7 @@
   <ItemGroup>
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Character.cpp" />
+    <ClCompile Include="LineSegment.cpp" />
     <ClCompile Include="Rectangle.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Matrix.cpp" />
@@ -89,6 +90,7 @@
     <ClInclude Include="Dimensions.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Character.h" />
+    <ClInclude Include="LineSegment.h" />
     <ClInclude Include="Rectangle.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="ShaderProgram.h" />
