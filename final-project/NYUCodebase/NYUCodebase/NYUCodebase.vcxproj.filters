@@ -82,5 +82,6 @@
     <None Include="fragment.glsl" />
     <None Include="vertex.glsl" />
     <None Include="fragment_textured.glsl" />
+    <None Include="fragment_black_alpha.glsl" />
   </ItemGroup>
 </Project>

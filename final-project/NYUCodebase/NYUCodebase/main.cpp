@@ -38,6 +38,7 @@ using std::vector;
 enum GameMode {	MODE_QUIT, MODE_START, MODE_PLAY, MODE_END };
 SDL_Window* displayWindow;
 ShaderProgram* program;
+ShaderProgram* faderProgram;
 const Matrix IDENTITY;
 GLuint LoadTexture(const char *filePath) {
 	int w, h, comp;
@@ -124,6 +125,51 @@ struct RectangleAndTextureID {
 	unsigned int TextureID;
 	CompareType Comparee;
 };
+namespace Fader {
+	float FADER_VERTICES[12];
+	Uint32 FadeFinishTime = 0;
+	bool FadingIn = true;
+	void DimScreen(float blackness) {
+		faderProgram->SetModelviewMatrix(IDENTITY);
+		glUniform1f(glGetUniformLocation(faderProgram->programID, "alphaValue"), blackness);
+		glVertexAttribPointer(program->positionAttribute, 2, GL_FLOAT, false, 0, FADER_VERTICES);
+		glEnableVertexAttribArray(program->positionAttribute);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glDisableVertexAttribArray(program->positionAttribute);
+	}
+	bool FadeDone() {
+		return SDL_GetTicks() >= FadeFinishTime;
+	}
+	void StartFade(bool fadeIn) {
+		Uint32 now = SDL_GetTicks();
+		// If the previous fade hasn't finished yet,
+		// then just reverse that fade. If the fade
+		// direction is the same, then don't do anything.
+		if (now < FadeFinishTime && fadeIn != FadingIn) {
+			FadeFinishTime = now + (now - (FadeFinishTime - 500));
+		}
+		else {
+			FadeFinishTime = now + 500;
+		}
+		FadingIn = fadeIn;
+	}
+	void DrawShade() {
+		Uint32 now = SDL_GetTicks();
+		if (now < FadeFinishTime) {
+			// Interpolate the alpha value over time.
+			if (FadingIn) {
+				DimScreen((FadeFinishTime - now) / 500.0f);
+			}
+			else {
+				DimScreen(1.0f - (FadeFinishTime - now) / 500.0f);
+			}
+		}
+		else if (!FadingIn) {
+			// Black out the whole screen.
+			DimScreen(1.0f);
+		}
+	}
+}
 int main(int argc, char *argv[]) {
 	// Set up the SDL and OpenGL.
 	SDL_Init(SDL_INIT_VIDEO);
@@ -138,11 +184,14 @@ int main(int argc, char *argv[]) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	program = new ShaderProgram(RESOURCE_FOLDER"vertex_textured.glsl", RESOURCE_FOLDER"fragment_textured.glsl");
+	faderProgram = new ShaderProgram(RESOURCE_FOLDER"vertex_textured.glsl", RESOURCE_FOLDER"fragment_black_alpha.glsl");
+	Rectangle::SetBox(Fader::FADER_VERTICES, ORTHO_Y_BOUND, ORTHO_X_BOUND, -ORTHO_Y_BOUND, -ORTHO_X_BOUND);
 	// Set the projection matrix.
 	{
 		Matrix projectionMatrix;
 		projectionMatrix.SetOrthoProjection(-ORTHO_X_BOUND, ORTHO_X_BOUND, -ORTHO_Y_BOUND, ORTHO_Y_BOUND, -1.0f, 1.0f);
 		program->SetProjectionMatrix(projectionMatrix);
+		faderProgram->SetProjectionMatrix(projectionMatrix);
 	}
 	// Read the level data from the file.
 	TileFile tileFile;
@@ -200,12 +249,14 @@ int main(int argc, char *argv[]) {
 	auto Tstart = LoadTexture(RESOURCE_FOLDER"Images/Start.png");
 	auto Tend = LoadTexture(RESOURCE_FOLDER"Images/End.png");
 	// Start the game.
-	GameMode mode = MODE_START;
+	GameMode mode = MODE_START, nextMode;
+	bool modeWaitingForFade = false;
 	while (mode != MODE_QUIT) {
 		{
 			Rectangle startScreen(0.0f, 0.0f, ORTHO_X_BOUND, ORTHO_Y_BOUND, 0.0f, 0.0f, 1.0f, 1.0f);
 			Character marker(0.0f, 0.0f);
 			bool selectionOnQuit = false;
+			Fader::StartFade(true);
 			while (mode == MODE_START) {
 				// Process input.
 				Uint32 ms = MillisecondsElapsed();
@@ -224,7 +275,9 @@ int main(int argc, char *argv[]) {
 						mode = MODE_QUIT;
 					}
 					else {
-						mode = MODE_PLAY;
+						nextMode = MODE_PLAY;
+						modeWaitingForFade = true;
+						Fader::StartFade(false);
 					}
 				}
 				marker.Model.SetPosition(-1.75f, selectionOnQuit ? -0.6f : -0.1f, 0.0f);
@@ -233,6 +286,11 @@ int main(int argc, char *argv[]) {
 				// Draw.
 				DrawRectangleWithTexture(startScreen, IDENTITY, Tstart);
 				DrawRectangleWithTexture(marker, IDENTITY, Tbetty);
+				Fader::DrawShade();
+				if (modeWaitingForFade && Fader::FadeDone()) {
+					mode = nextMode;
+					modeWaitingForFade = false;
+				}
 				// Update screen.
 				SDL_GL_SwapWindow(displayWindow);
 			}
@@ -312,6 +370,7 @@ int main(int argc, char *argv[]) {
 			// Provide some basic screen shake
 			Uint32 screenShakeFinishTime = 0;
 			// Main game loop
+			Fader::StartFade(true);
 			while (mode == MODE_PLAY) {
 				// Set the view matrix so that the view is centered on the player.
 				{
@@ -337,8 +396,12 @@ int main(int argc, char *argv[]) {
 					float dy;
 					Tile* theTile = playerAdvancingToNextLevel;
 					if (theTile->GetCenterY() >= -TILE_TEXTURE_HEIGHT) {
-						mode = MODE_END;
-						dy = 0.0f;
+						if (!modeWaitingForFade) {
+							nextMode = MODE_END;
+							modeWaitingForFade = true;
+							Fader::StartFade(false);
+						}
+						dy = ms * PLAYER_VELOCITY;
 					}
 					else if (theTile->GetCenterY() >= playerAdvancingTargetY) {
 						// The player has reached the next level.
@@ -544,6 +607,12 @@ int main(int argc, char *argv[]) {
 				// Save the player's position.
 				playerLastX = player.GetCenterX();
 				playerLastY = player.GetCenterY();
+				// Do the screen fade.
+				Fader::DrawShade();
+				if (modeWaitingForFade && Fader::FadeDone()) {
+					mode = nextMode;
+					modeWaitingForFade = false;
+				}
 				// Update screen.
 				SDL_GL_SwapWindow(displayWindow);
 			}
@@ -559,24 +628,37 @@ int main(int argc, char *argv[]) {
 		}
 		if (mode == MODE_END) {
 			Rectangle endScreen(0.0f, 0.0f, ORTHO_X_BOUND, ORTHO_Y_BOUND, 0.0f, 0.0f, 1.0f, 1.0f);
-			// Draw once.
-			glClear(GL_COLOR_BUFFER_BIT);
-			DrawRectangleWithTexture(endScreen, IDENTITY, Tend);
-			SDL_GL_SwapWindow(displayWindow);
-			// Process input.
+			Fader::StartFade(true);
 			while (mode == MODE_END) {
+				// Process input.
 				Uint32 ms = MillisecondsElapsed();
 				Input input;
 				if (input.QuitRequested) {
 					mode = MODE_QUIT;
 				}
 				else if (input.SpacePressed || input.EnterPressed || input.EscapePressed) {
-					mode = MODE_START;
+					nextMode = MODE_START;
+					modeWaitingForFade = true;
+					Fader::StartFade(false);
+				}
+				// Draw.
+				if (Fader::FadeDone()) {
+					if (modeWaitingForFade) {
+						mode = nextMode;
+						modeWaitingForFade = false;
+					}
+				}
+				else {
+					glClear(GL_COLOR_BUFFER_BIT);
+					DrawRectangleWithTexture(endScreen, IDENTITY, Tend);
+					Fader::DrawShade();
+					SDL_GL_SwapWindow(displayWindow);
 				}
 			}
 		}
 	}
 	delete program;
+	delete faderProgram;
 	SDL_Quit();
 	return 0;
 }
