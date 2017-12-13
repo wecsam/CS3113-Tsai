@@ -23,6 +23,8 @@
 #include "TileFile.h"
 #define TILE_FILE "Levels.txt"
 #define PLAYER_VELOCITY 0.001f
+#define TILE_TYPE_LEVEL_COMPLETION 53
+#define TILE_TYPE_LEVEL_START 57
 #ifdef _WINDOWS
 	#define RESOURCE_FOLDER ""
 #else
@@ -287,8 +289,9 @@ int main(int argc, char *argv[]) {
 			Matrix view;
 			Character player(ISOMETRIC_TO_SCREEN(playerStart->second.begin()->Row, playerStart->second.begin()->Column));
 			Character helper(ISOMETRIC_TO_SCREEN(helperStart->second.begin()->Row, helperStart->second.begin()->Column));
-			float playerLastX = player.GetCenterX(), playerLastY = player.GetCenterY();
+			float playerLastX = player.GetCenterX(), playerLastY = player.GetCenterY(), playerAdvancingTargetY;
 			Switch* playerNearSwitch = nullptr;
+			Tile* playerAdvancingToNextLevel = nullptr;
 			while (mode == MODE_PLAY) {
 				// Set the view matrix so that the view is centered on the player.
 				view.SetPosition(-player.GetCenterX(), -player.GetCenterY(), 0.0f);
@@ -301,13 +304,31 @@ int main(int argc, char *argv[]) {
 				else if (input.EscapePressed) {
 					mode = MODE_START;
 				}
-				else if (input.SpacePressed) {
-					if (playerNearSwitch) {
-						// Flip the switch.
-						playerNearSwitch->Flip();
+				else if (playerAdvancingToNextLevel) {
+					// The player is advancing to the next level.
+					float dy;
+					Tile* theTile = playerAdvancingToNextLevel;
+					if (theTile->GetCenterY() >= playerAdvancingTargetY) {
+						// The player has reached the next level.
+						dy = playerAdvancingTargetY - theTile->GetCenterY();
+						playerAdvancingToNextLevel = nullptr;
 					}
+					else {
+						// Make the player rise.
+						dy = ms * PLAYER_VELOCITY;
+					}
+					player.Model.Translate(0.0f, dy, 0.0f);
+					theTile->Model.Translate(0.0f, dy, 0.0f);
 				}
-				MoveCharacter(player, input.PlayerDirection, ms);
+				else {
+					// Press the spacebar to flip the switch.
+					if (input.SpacePressed) {
+						if (playerNearSwitch) {
+							playerNearSwitch->Flip();
+						}
+					}
+					MoveCharacter(player, input.PlayerDirection, ms);
+				}
 				// Make the helper move.
 				if (helperDoor->IsOpenDoor() && !helperSwitch->IsOn()) {
 					Input::Direction helperDirection = Input::NONE;
@@ -338,7 +359,27 @@ int main(int argc, char *argv[]) {
 				// Clear screen.
 				glClear(GL_COLOR_BUFFER_BIT);
 				// Draw the floor.
-				for (const auto& tile : tilesFloor) {
+				for (auto& tile : tilesFloor) {
+					// Check whether the player is on this tile.
+					if (
+						fabs(player.GetCenterX() - tile.GetCenterX()) < TILE_TEXTURE_WIDTH / 4.0f &&
+						tile.GetCenterY() - TILE_TEXTURE_HEIGHT * 0.675f < player.GetCenterY() &&
+						player.GetCenterY() < tile.GetCenterY() - TILE_TEXTURE_HEIGHT * 0.125f
+					) {
+						// Check whether this is the tile that marks the completion of the level.
+						if (!playerAdvancingToNextLevel && tile.GetType() == TILE_TYPE_LEVEL_COMPLETION) {
+							// The user completed this level.
+							playerAdvancingToNextLevel = &tile;
+							// Put the player in the middle of the tile.
+							player.Model.SetPosition(tile.GetCenterX(), tile.GetCenterY() - TILE_TEXTURE_HEIGHT / 4.0f, 0.0f);
+							player.Face(Character::DOWN);
+							player.Stand();
+							// The player should rise 4 spaces. Set the destination.
+							playerAdvancingTargetY = tile.GetCenterY() + TILE_TEXTURE_HEIGHT * 4.0f;
+							tile.SetType(TILE_TYPE_LEVEL_START);
+						}
+					}
+					// Draw the tile.
 					DrawRectangleWithTexture(tile, view, Ttiles);
 				}
 				// Draw walls above the player or helper, draw the player or helper, draw the walls between the
@@ -349,8 +390,9 @@ int main(int argc, char *argv[]) {
 					for (const Tile* tile : tilesWalls) {
 						// TODO: use the diagonal edge of the wall instead of a flat Y value
 						drawList.emplace_back(tile, Ttiles, tile->GetCenterY() - TILE_TEXTURE_HEIGHT * 0.125f);
-						// Check for a collision between this wall and the player.
-						if (!tile->IsOpenDoor()) {
+						// If this is not an open door and the player is not advancing to the next level,
+						// check for a collision between this wall and the player.
+						if (!tile->IsOpenDoor() && !playerAdvancingToNextLevel) {
 							LineSegment wallBottomEdge;
 							if (tile->GetBottomEdge(wallBottomEdge)) {
 								float intersectionX, intersectionY;
@@ -387,6 +429,12 @@ int main(int argc, char *argv[]) {
 						DrawRectangleWithTexture(*r.Rectangle, view, r.TextureID);
 					}
 				}
+				// If the player is advancing to the next level, just draw the player and the tile on top of everything.
+				if (playerAdvancingToNextLevel) {
+					DrawRectangleWithTexture(*playerAdvancingToNextLevel, view, Ttiles);
+					DrawRectangleWithTexture(player, view, Tbetty);
+				}
+				// Save the player's position.
 				playerLastX = player.GetCenterX();
 				playerLastY = player.GetCenterY();
 				// Update screen.

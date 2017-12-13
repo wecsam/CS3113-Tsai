@@ -27,7 +27,6 @@ public:
 	void CloseDoor();
 	void OpenDoor();
 	TileType GetDoorZCover() const;
-protected:
 	void SetType(TileType type);
 private:
 	TileType type;
