@@ -397,7 +397,7 @@ int main(int argc, char *argv[]) {
 					float d = 0.0f;
 					if (now < screenShakeFinishTime) {
 						d = (screenShakeFinishTime - now) / 1000.0f;
-						d = 0.2f * (1 - d) * sin(100.0f * d);
+						d = 0.05f * (1 - d) * sin(100.0f * d);
 					}
 					view.SetPosition(-player.GetCenterX() + d, -player.GetCenterY() + d, 0.0f);
 				}
