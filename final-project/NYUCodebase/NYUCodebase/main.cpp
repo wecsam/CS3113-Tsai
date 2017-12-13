@@ -109,6 +109,9 @@ void MoveCharacter(Character& c, Input::Direction d, Uint32 ms) {
 		c.Stand();
 	}
 }
+float square(float x) {
+	return x * x;
+}
 template<typename CompareType>
 struct RectangleAndTextureID {
 	RectangleAndTextureID(const Rectangle* Rectangle, unsigned int TextureID, CompareType Comparee)
@@ -242,10 +245,21 @@ int main(int argc, char *argv[]) {
 		cerr << "There must be exactly one starting location for the helper AI.\n";
 		return 10;
 	}
+	// Find the location of the rock.
+	auto rockStart = tileFile.GetEntities().find("Rock");
+	if (rockStart == tileFile.GetEntities().end()) {
+		cerr << "The rock's start location is missing.\n";
+		return 11;
+	}
+	if (rockStart->second.size() != 1) {
+		cerr << "There must be exactly one starting location for the rock.\n";
+		return 12;
+	}
 	// Load textures.
 	auto Ttiles = LoadTexture(RESOURCE_FOLDER"Images/Prototype_31x6.png");
 	auto Tbetty = LoadTexture(RESOURCE_FOLDER"Images/Betty.png");
 	auto Tgeorge = LoadTexture(RESOURCE_FOLDER"Images/George.png");
+	auto Trock = LoadTexture(RESOURCE_FOLDER"Images/Rock.png");
 	auto Tstart = LoadTexture(RESOURCE_FOLDER"Images/Start.png");
 	// Start the game.
 	GameMode mode = MODE_START;
@@ -289,9 +303,12 @@ int main(int argc, char *argv[]) {
 			Matrix view;
 			Character player(ISOMETRIC_TO_SCREEN(playerStart->second.begin()->Row, playerStart->second.begin()->Column));
 			Character helper(ISOMETRIC_TO_SCREEN(helperStart->second.begin()->Row, helperStart->second.begin()->Column));
+			Rectangle rock(ISOMETRIC_TO_SCREEN(rockStart->second.begin()->Row, rockStart->second.begin()->Column), 0.125f, 0.125f, 0.0f, 0.0f, 1.0f, 1.0f);
 			float playerLastX = player.GetCenterX(), playerLastY = player.GetCenterY(), playerAdvancingTargetY;
 			Switch* playerNearSwitch = nullptr;
 			Tile* playerAdvancingToNextLevel = nullptr;
+			enum RockStatus { ROCK_SITTING, ROCK_FOLLOWING_PLAYER, ROCK_FLYING, ROCK_HIT_SWITCH, ROCK_DONE } rockStatus = ROCK_SITTING;
+			Switch* rockTarget = nullptr;
 			while (mode == MODE_PLAY) {
 				// Set the view matrix so that the view is centered on the player.
 				view.SetPosition(-player.GetCenterX(), -player.GetCenterY(), 0.0f);
@@ -330,6 +347,7 @@ int main(int argc, char *argv[]) {
 						if (playerNearSwitch) {
 							playerNearSwitch->Flip();
 						}
+						// Note: the rock can also flip the switch. See below.
 					}
 					MoveCharacter(player, input.PlayerDirection, ms);
 				}
@@ -360,6 +378,58 @@ int main(int argc, char *argv[]) {
 				}
 				// Create a line segment from the player's last position to the player's current position.
 				LineSegment playerPath(playerLastX, playerLastY - PLAYER_FEET_OFFSET_Y, player.GetCenterX(), player.GetCenterY() - PLAYER_FEET_OFFSET_Y);
+				// If the player has the rock, make the rock follow the player.
+				switch (rockStatus) {
+				case ROCK_SITTING:
+					if (square(rock.GetCenterX() - player.GetCenterX()) + square(rock.GetCenterY() - player.GetCenterY()) < 0.125f) {
+						// The player touched the rock. Make the rock follow the player.
+						rockStatus = ROCK_FOLLOWING_PLAYER;
+					}
+					break;
+				case ROCK_FOLLOWING_PLAYER:
+					rock.Model.SetPosition(player.GetCenterX(), player.GetCenterY() + 0.125f, 0.0f);
+					if (input.SpacePressed) {
+						// Search for the nearest switch that is off.
+						float distanceSquaredMax = 4.0f;
+						Switch* target = nullptr;
+						for (Switch* toggler : switches) {
+							if (!toggler->IsOn()) {
+								float distanceSquared = square(rock.GetCenterX() - toggler->GetCenterX()) + square(rock.GetCenterY() - toggler->GetCenterY());
+								if (distanceSquared <= distanceSquaredMax) {
+									distanceSquaredMax = distanceSquared;
+									target = toggler;
+								}
+							}
+						}
+						// Throw the rock at the switch.
+						if (target) {
+							rockTarget = target;
+							rockStatus = ROCK_FLYING;
+						}
+					}
+					break;
+				case ROCK_FLYING:
+					if(rockTarget){
+						float distanceX = rockTarget->GetCenterX() - rock.GetCenterX(),
+							distanceY = rockTarget->GetCenterY() - rock.GetCenterY();
+						// Check whether the rock has hit the switch.
+						if (square(distanceX) + square(distanceY) < 0.125f) {
+							rockStatus = ROCK_HIT_SWITCH;
+						}
+						else {
+							float rockFlightAngle = atan2(distanceY, distanceX);
+							rock.Model.Translate(cos(rockFlightAngle) * PLAYER_VELOCITY * ms, sin(rockFlightAngle) * PLAYER_VELOCITY * ms, 0.0f);
+						}
+					}
+					else {
+						rockStatus = ROCK_FOLLOWING_PLAYER;
+					}
+					break;
+				case ROCK_HIT_SWITCH:
+					rockTarget->Flip();
+					rockStatus = ROCK_DONE;
+					break;
+				}
 				// Clear screen.
 				glClear(GL_COLOR_BUFFER_BIT);
 				// Draw the floor.
@@ -432,6 +502,10 @@ int main(int argc, char *argv[]) {
 					for (const auto& r : drawList) {
 						DrawRectangleWithTexture(*r.Rectangle, view, r.TextureID);
 					}
+				}
+				// Draw the rock.
+				if (rockStatus != ROCK_DONE) {
+					DrawRectangleWithTexture(rock, view, Trock);
 				}
 				// If the player is advancing to the next level, just draw the player and the tile on top of everything.
 				if (playerAdvancingToNextLevel) {
