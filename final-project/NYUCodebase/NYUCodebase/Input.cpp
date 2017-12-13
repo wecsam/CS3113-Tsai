@@ -16,6 +16,7 @@ Input::Input() {
 				break;
 			case SDL_SCANCODE_RETURN:
 			case SDL_SCANCODE_RETURN2:
+			case SDL_SCANCODE_KP_ENTER:
 				EnterPressed = true;
 				break;
 			case SDL_SCANCODE_ESCAPE:
