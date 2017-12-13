@@ -171,7 +171,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	// Process the Floor and Walls layers.
-	vector<Tile> tilesFloor;
+	vector<Tile*> tilesFloor;
 	vector<Tile*> tilesWalls;
 	vector<Tile> tilesDoorZCovers;
 	{
@@ -190,7 +190,7 @@ int main(int argc, char *argv[]) {
 			for (size_t j = 0; j < tileFile.GetMapWidth(); ++j) {
 				// Add a floor tile.
 				if (tilesFloorTypes->second[i][j] > 0) {
-					tilesFloor.emplace_back((float)i, (float)j, tilesFloorTypes->second[i][j]);
+					tilesFloor.push_back(new Tile((float)i, (float)j, tilesFloorTypes->second[i][j]));
 				}
 				// Add a wall tile.
 				if (tilesWallsTypes->second[i][j] > 0) {
@@ -303,15 +303,24 @@ int main(int argc, char *argv[]) {
 		}
 		{
 			Matrix view;
-			Character player(ISOMETRIC_TO_SCREEN(playerStart->second.begin()->Row, playerStart->second.begin()->Column));
+			Character player(0.0f, 0.0f);
 			Character helper(ISOMETRIC_TO_SCREEN(helperStart->second.begin()->Row, helperStart->second.begin()->Column));
 			Rectangle rock(ISOMETRIC_TO_SCREEN(rockStart->second.begin()->Row, rockStart->second.begin()->Column), 0.125f, 0.125f, 0.0f, 0.0f, 1.0f, 1.0f);
-			float playerLastX = player.GetCenterX(), playerLastY = player.GetCenterY(), playerAdvancingTargetY;
+			// Create the tile that will bring the player to the first level.
+			Tile* start = new Tile((float)playerStart->second.begin()->Row, (float)playerStart->second.begin()->Column, TILE_TYPE_LEVEL_START);
+			float playerLastX = 0.0f, playerLastY = 0.0f, playerAdvancingTargetY = start->GetCenterY();
+			start->Model.Translate(0.0f, TILE_TEXTURE_HEIGHT * -4.0f, 0.0f);
+			player.Model.SetPosition(start->GetCenterX(), start->GetCenterY() - TILE_TEXTURE_HEIGHT / 4.0f, 0.0f);
+			Tile* playerAdvancingToNextLevel = start;
+			tilesFloor.push_back(start);
+			// If the player is near a switch, this points to that switch.
 			Switch* playerNearSwitch = nullptr;
-			Tile* playerAdvancingToNextLevel = nullptr;
+			// Keep track of the status of the rock
 			enum RockStatus { ROCK_SITTING, ROCK_FOLLOWING_PLAYER, ROCK_FLYING, ROCK_HIT_SWITCH, ROCK_DONE } rockStatus = ROCK_SITTING;
 			Switch* rockTarget = nullptr;
+			// Provide some basic screen shake
 			Uint32 screenShakeFinishTime = 0;
+			// Main game loop
 			while (mode == MODE_PLAY) {
 				// Set the view matrix so that the view is centered on the player.
 				{
@@ -447,30 +456,43 @@ int main(int argc, char *argv[]) {
 				// Clear screen.
 				glClear(GL_COLOR_BUFFER_BIT);
 				// Draw the floor.
-				for (auto& tile : tilesFloor) {
+				bool playerIsOnTheFloor = false;
+				for (Tile* tile : tilesFloor) {
 					// Check whether the player is on this tile.
 					if (
-						fabs(player.GetCenterX() - tile.GetCenterX()) < TILE_TEXTURE_WIDTH / 4.0f &&
-						tile.GetCenterY() - TILE_TEXTURE_HEIGHT * 0.675f < player.GetCenterY() &&
-						player.GetCenterY() < tile.GetCenterY() - TILE_TEXTURE_HEIGHT * 0.125f
+						fabs(player.GetCenterX() - tile->GetCenterX()) < TILE_TEXTURE_WIDTH / 4.0f &&
+						tile->GetCenterY() - TILE_TEXTURE_HEIGHT * 0.675f < player.GetCenterY() &&
+						player.GetCenterY() < tile->GetCenterY() - TILE_TEXTURE_HEIGHT * 0.125f
 					) {
 						// Check whether this is the tile that marks the completion of the level.
-						if (!playerAdvancingToNextLevel && tile.GetType() == TILE_TYPE_LEVEL_COMPLETION) {
+						if (!playerAdvancingToNextLevel && tile->GetType() == TILE_TYPE_LEVEL_COMPLETION) {
 							// The user completed this level.
-							playerAdvancingToNextLevel = &tile;
+							playerAdvancingToNextLevel = tile;
 							// Put the player in the middle of the tile.
-							player.Model.SetPosition(tile.GetCenterX(), tile.GetCenterY() - TILE_TEXTURE_HEIGHT / 4.0f, 0.0f);
+							player.Model.SetPosition(tile->GetCenterX(), tile->GetCenterY() - TILE_TEXTURE_HEIGHT / 4.0f, 0.0f);
 							player.Face(Character::DOWN);
 							player.Stand();
 							// The player should rise 4 spaces. Set the destination.
-							playerAdvancingTargetY = tile.GetCenterY() + TILE_TEXTURE_HEIGHT * 4.0f;
-							tile.SetType(TILE_TYPE_LEVEL_START);
+							playerAdvancingTargetY = tile->GetCenterY() + TILE_TEXTURE_HEIGHT * 4.0f;
+							tile->SetType(TILE_TYPE_LEVEL_START);
 							// Shake the screen.
-							screenShakeFinishTime = SDL_GetTicks() + 50;
+							screenShakeFinishTime = SDL_GetTicks() + 500;
 						}
+						playerIsOnTheFloor = true;
+					}
+					else if (
+						tile->GetLeftBoxBound() <= player.GetCenterX() &&
+						player.GetCenterX() <= tile->GetRightBoxBound() &&
+						tile->GetCenterY() - TILE_TEXTURE_HEIGHT * 0.5f < player.GetCenterY() &&
+						player.GetCenterY() < tile->GetCenterY()
+					) {
+						playerIsOnTheFloor = true;
 					}
 					// Draw the tile.
-					DrawRectangleWithTexture(tile, view, Ttiles);
+					DrawRectangleWithTexture(*tile, view, Ttiles);
+				}
+				if (!playerIsOnTheFloor && !playerAdvancingToNextLevel) {
+					player.Model.Translate(0.0f, -0.003f * ms, 0.0f);
 				}
 				// Draw walls above the player or helper, draw the player or helper, draw the walls between the
 				// player and helper, draw the other character, and then draw walls below that character.
@@ -553,6 +575,9 @@ int main(int argc, char *argv[]) {
 				}
 			}
 		}
+	}
+	for (Tile* tile : tilesFloor) {
+		delete tile;
 	}
 	for (Tile* tile : tilesWalls) {
 		delete tile;
