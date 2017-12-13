@@ -115,6 +115,13 @@ void MoveCharacter(Character& c, Input::Direction d, Uint32 ms) {
 float square(float x) {
 	return x * x;
 }
+float easeOutElastic(float from, float to, float time) {
+	// From slide 50 on November 20, 2017
+	float p = 0.3f;
+	float s = p / 4.0f;
+	float diff = (to - from);
+	return from + diff + (diff * pow(2.0f, -10.0f * time) * sinf((time - s) * (float)(2.0 * M_PI) / p));
+}
 template<typename CompareType>
 struct RectangleAndTextureID {
 	RectangleAndTextureID(const Rectangle* Rectangle, unsigned int TextureID, CompareType Comparee)
@@ -270,6 +277,7 @@ int main(int argc, char *argv[]) {
 			Character marker(0.0f, 0.0f);
 			bool selectionOnQuit = false;
 			Fader::StartFade(true);
+			Uint32 selectionMoveStartTime = 0;
 			while (mode == MODE_START) {
 				// Process input.
 				Uint32 ms = MillisecondsElapsed();
@@ -280,12 +288,14 @@ int main(int argc, char *argv[]) {
 				else if (input.UpPressed) {
 					if (selectionOnQuit) {
 						Mix_PlayChannel(-1, Sselect, 0);
+						selectionMoveStartTime = SDL_GetTicks();
 					}
 					selectionOnQuit = false;
 				}
 				else if (input.DownPressed) {
 					if (!selectionOnQuit) {
 						Mix_PlayChannel(-1, Sselect, 0);
+						selectionMoveStartTime = SDL_GetTicks();
 					}
 					selectionOnQuit = true;
 				}
@@ -299,7 +309,15 @@ int main(int argc, char *argv[]) {
 						Fader::StartFade(false);
 					}
 				}
-				marker.Model.SetPosition(-1.75f, selectionOnQuit ? -0.6f : -0.1f, 0.0f);
+				marker.Model.SetPosition(
+					-1.75f,
+					easeOutElastic(
+						selectionOnQuit ? -0.1f : -0.6f,
+						selectionOnQuit ? -0.6f : -0.1f,
+						(SDL_GetTicks() - selectionMoveStartTime) / 1000.0f
+					),
+					0.0f
+				);
 				// Clear screen.
 				glClear(GL_COLOR_BUFFER_BIT);
 				// Draw.
