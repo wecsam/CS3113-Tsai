@@ -267,12 +267,14 @@ int main(int argc, char *argv[]) {
 						// TODO: use the diagonal edge of the wall instead of a flat Y value
 						drawList.emplace_back(tile, Ttiles, tile->GetCenterY() - TILE_TEXTURE_HEIGHT * 0.125f);
 						// Check for a collision between this wall and the player.
-						float intersectionX, intersectionY;
-						LineSegment wallBottomEdge;
-						if (tile->GetBottomEdge(wallBottomEdge)) {
-							if (playerPath.IntersectionWith(wallBottomEdge, intersectionX, intersectionY)) {
-								// The player collided!
-								player.Model.SetPosition(playerLastX, playerLastY, 0.0f);
+						if (!tile->IsOpenDoor()) {
+							LineSegment wallBottomEdge;
+							if (tile->GetBottomEdge(wallBottomEdge)) {
+								float intersectionX, intersectionY;
+								if (playerPath.IntersectionWith(wallBottomEdge, intersectionX, intersectionY)) {
+									// The player collided!
+									player.Model.SetPosition(playerLastX, playerLastY, 0.0f);
+								}
 							}
 						}
 					}
