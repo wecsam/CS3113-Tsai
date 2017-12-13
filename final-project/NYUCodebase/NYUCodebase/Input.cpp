@@ -14,6 +14,9 @@ Input::Input() {
 			case SDL_SCANCODE_ESCAPE:
 				EscapePressed = true;
 				break;
+			case SDL_SCANCODE_SPACE:
+				SpacePressed = true;
+				break;
 			}
 			break;
 		}

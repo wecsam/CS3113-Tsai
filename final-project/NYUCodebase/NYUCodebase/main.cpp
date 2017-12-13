@@ -17,6 +17,7 @@
 #include "Input.h"
 #include "Matrix.h"
 #include "ShaderProgram.h"
+#include "Switch.h"
 #include "Tile.h"
 #include "TileFile.h"
 #define TILE_FILE "Levels.txt"
@@ -115,9 +116,19 @@ int main(int argc, char *argv[]) {
 		cerr << "Unable to parse level data!\n" << e.message << '\n' << e.line << '\n';
 		return 2;
 	}
+	// Process the Switches.
+	vector<Switch> switches;
+	{
+		auto switchEntities = tileFile.GetEntities().find("Switch");
+		if (switchEntities != tileFile.GetEntities().end()) {
+			for (const auto& entity : switchEntities->second) {
+				switches.emplace_back((float)entity.Row, (float)entity.Column, entity.DoorX, entity.DoorY, entity.FacingLeft);
+			}
+		}
+	}
 	// Process the Floor and Walls layers.
 	vector<Tile> tilesFloor;
-	vector<Tile> tilesWalls;
+	vector<Tile*> tilesWalls;
 	{
 		auto tilesFloorTypes = tileFile.GetLayers().find("Floor");
 		if (tilesFloorTypes == tileFile.GetLayers().end()) {
@@ -129,13 +140,28 @@ int main(int argc, char *argv[]) {
 			cerr << "The Walls layer is missing.\n";
 			return 4;
 		}
+		// The two layers have the same dimensions, so we can take care of both with one loop.
 		for (size_t i = 0; i < tileFile.GetMapHeight(); ++i) {
 			for (size_t j = 0; j < tileFile.GetMapWidth(); ++j) {
+				// Add a floor tile.
 				if (tilesFloorTypes->second[i][j] > 0) {
 					tilesFloor.emplace_back((float)i, (float)j, tilesFloorTypes->second[i][j]);
 				}
+				// Add a wall tile.
 				if (tilesWallsTypes->second[i][j] > 0) {
-					tilesWalls.emplace_back((float)i, (float)j, tilesWallsTypes->second[i][j]);
+					Tile* newTile = new Tile((float)i, (float)j, tilesWallsTypes->second[i][j]);
+					tilesWalls.push_back(newTile);
+					// Check whether this is a door.
+					if (newTile->IsDoor()) {
+						// Check whether there is a switch that controls this wall.
+						// We could create a map of coordinates, but there are not that many switches anyway.
+						for (auto& toggler : switches) {
+							if (toggler.GetDoorX() == j && toggler.GetDoorY() == i) {
+								auto test = newTile->GetType();
+								toggler.Door = newTile;
+							}
+						}
+					}
 				}
 			}
 		}
@@ -174,6 +200,7 @@ int main(int argc, char *argv[]) {
 			Matrix view;
 			Character player(ISOMETRIC_TO_SCREEN(playerStart->second.begin()->Row, playerStart->second.begin()->Column));
 			Character helper(ISOMETRIC_TO_SCREEN(helperStart->second.begin()->Row, helperStart->second.begin()->Column));
+			Switch* playerNearSwitch = nullptr;
 			while (mode == MODE_PLAY) {
 				// Process input.
 				auto ms = MillisecondsElapsed();
@@ -183,6 +210,12 @@ int main(int argc, char *argv[]) {
 				}
 				else if (input.EscapePressed) {
 					mode = MODE_START;
+				}
+				else if (input.SpacePressed) {
+					if (playerNearSwitch) {
+						// Flip the switch.
+						playerNearSwitch->Flip();
+					}
 				}
 				switch (input.PlayerDirection) {
 				case Input::DOWN:
@@ -221,9 +254,21 @@ int main(int argc, char *argv[]) {
 				{
 					list<RectangleAndTextureID<float>> drawList;
 					// Add all walls to the draw list.
-					for (const auto& tile : tilesWalls) {
+					for (const Tile* tile : tilesWalls) {
 						// TODO: use the diagonal edge of the wall instead of a flat Y value
-						drawList.emplace_back(&tile, Ttiles, tile.GetCenterY() - TILE_TEXTURE_HEIGHT * 0.125f);
+						drawList.emplace_back(tile, Ttiles, tile->GetCenterY() - TILE_TEXTURE_HEIGHT * 0.125f);
+					}
+					// Add all switches to the draw list.
+					// Also, check whether the player is near a switch.
+					playerNearSwitch = nullptr;
+					for (auto& toggler : switches) {
+						drawList.emplace_back(&toggler, Ttiles, toggler.GetCenterY() - TILE_TEXTURE_HEIGHT * 0.126f);
+						if (
+							toggler.GetLeftBoxBound() <= player.GetCenterX() && player.GetCenterX() <= toggler.GetRightBoxBound() &&
+							toggler.GetBottomBoxBound() <= player.GetCenterY() && player.GetCenterY() <= toggler.GetTopBoxBound()
+						) {
+							playerNearSwitch = &toggler;
+						}
 					}
 					// Add characters to the other list.
 					drawList.emplace_back(&player, Tbetty, player.GetCenterY());
@@ -243,6 +288,9 @@ int main(int argc, char *argv[]) {
 			// TODO: make an end screen
 			mode = MODE_QUIT;
 		}
+	}
+	for (Tile* tile : tilesWalls) {
+		delete tile;
 	}
 	delete program;
 	SDL_Quit();
