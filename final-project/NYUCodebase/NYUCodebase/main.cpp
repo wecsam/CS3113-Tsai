@@ -308,7 +308,11 @@ int main(int argc, char *argv[]) {
 					// The player is advancing to the next level.
 					float dy;
 					Tile* theTile = playerAdvancingToNextLevel;
-					if (theTile->GetCenterY() >= playerAdvancingTargetY) {
+					if (theTile->GetCenterY() >= -TILE_TEXTURE_HEIGHT) {
+						mode = MODE_END;
+						dy = 0.0f;
+					}
+					else if (theTile->GetCenterY() >= playerAdvancingTargetY) {
 						// The player has reached the next level.
 						dy = playerAdvancingTargetY - theTile->GetCenterY();
 						playerAdvancingToNextLevel = nullptr;
